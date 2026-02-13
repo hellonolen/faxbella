@@ -10,39 +10,33 @@
  * Docs: https://opennext.js.org/cloudflare
  */
 
-import type { OpenNextConfig } from 'open-next/types/open-next';
+import type { OpenNextConfig } from '@opennextjs/cloudflare';
 
 const config: OpenNextConfig = {
     default: {
-        // Use Cloudflare Workers for server-side rendering
         override: {
             wrapper: 'cloudflare-node',
             converter: 'edge',
-            // Incremental Static Regeneration via Cloudflare KV
+            proxyExternalRequest: 'fetch',
             incrementalCache: 'dummy',
             tagCache: 'dummy',
             queue: 'dummy',
         },
     },
 
-    // Middleware runs at the edge on every request
+    edgeExternals: ['node:crypto'],
+
     middleware: {
         external: true,
         override: {
             wrapper: 'cloudflare-edge',
             converter: 'edge',
             proxyExternalRequest: 'fetch',
+            incrementalCache: 'dummy',
+            tagCache: 'dummy',
+            queue: 'dummy',
         },
     },
-
-    // Build output configuration
-    buildCommand: 'npx next build',
-    buildOutputPath: '.next',
-
-    // Dangerous: skip certain build validations (use carefully)
-    // dangerous: {
-    //     disableIncrementalCache: true,
-    // },
 };
 
 export default config;
