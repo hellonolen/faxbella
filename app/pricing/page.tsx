@@ -346,7 +346,7 @@ export default function PricingPage() {
                 <span className="accent-line w-12" />
               </div>
               <h2 className="text-3xl md:text-5xl font-black tracking-tight text-[var(--color-vc-primary)] leading-[1.1]">
-                Every plan includes a 30-day money-back guarantee
+                Pick a plan, start routing
                 <span className="text-[var(--color-vc-accent)]">.</span>
               </h2>
             </div>
@@ -659,7 +659,7 @@ export default function PricingPage() {
         </section>
 
         {/* ============================================
-           MONEY-BACK GUARANTEE
+           TRUST / FLEXIBILITY
            ============================================ */}
         <section className="py-16 md:py-20 bg-[var(--color-vc-surface)] border-y border-[var(--color-vc-border)]">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -671,20 +671,19 @@ export default function PricingPage() {
               <div className="flex items-center justify-center gap-3 mb-6">
                 <span className="accent-line w-12" />
                 <span className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)]">
-                  Our Guarantee
+                  No Contracts
                 </span>
                 <span className="accent-line w-12" />
               </div>
 
               <h2 className="text-3xl md:text-4xl font-black tracking-tight text-[var(--color-vc-primary)] leading-[1.1] mb-6">
-                30-day money-back guarantee
+                Cancel anytime, no questions asked
                 <span className="text-[var(--color-vc-accent)]">.</span>
               </h2>
 
               <p className="text-base text-[var(--color-vc-text-secondary)] leading-relaxed max-w-xl mx-auto">
-                Try {SITE_CONFIG.name} risk-free. If it does not work for your
-                team within the first 30 days, we will refund every penny. No
-                questions asked, no hoops to jump through.
+                No long-term contracts. No cancellation fees. Upgrade, downgrade,
+                or cancel from your billing settings whenever you need to.
               </p>
             </div>
           </div>
@@ -788,7 +787,7 @@ export default function PricingPage() {
               </h2>
 
               <p className="mt-6 text-base md:text-lg text-[var(--color-vc-text-tertiary)] max-w-md leading-relaxed">
-                Setup takes 2 minutes. 30-day money-back guarantee.
+                Setup takes 2 minutes. Cancel anytime.
               </p>
 
               {/* CTA Row */}
