@@ -1,13 +1,21 @@
-# FaxBella - Cloudflare Pages Deployment
+# FaxBella - Cloudflare Workers Deployment via OpenNext
 # https://faxbella.com
 #
-# Deploy: npx wrangler pages deploy .open-next/assets
 # Build:  npx @opennextjs/cloudflare build
+# Deploy: npx @opennextjs/cloudflare deploy
 
 name = "faxbella"
 compatibility_date = "2025-12-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".open-next"
+main = ".open-next/worker.js"
+
+routes = [
+  { pattern = "faxbella.com/*", zone_name = "faxbella.com" },
+  { pattern = "www.faxbella.com/*", zone_name = "faxbella.com" }
+]
+
+[assets]
+directory = ".open-next/assets"
 
 [vars]
 ENVIRONMENT = "production"
