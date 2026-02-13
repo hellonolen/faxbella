@@ -7,153 +7,128 @@ import {
   ArrowUpRight,
   Check,
   ChevronDown,
-  X,
   Shield,
+  Layers,
+  TrendingUp,
+  Calculator,
+  Clock,
 } from 'lucide-react';
-import { SITE_CONFIG, PLANS, ROUTES } from '@/lib/constants';
+import { SITE_CONFIG, PLAN, DAY_PASS, ROUTES } from '@/lib/constants';
 import MarketingHeader from '@/components/marketing-header';
 import MarketingFooter from '@/components/marketing-footer';
-
-/* ============================================
-   Types
-   ============================================ */
-
-type BillingCycle = 'monthly' | 'annual';
-
-type PlanKey = keyof typeof PLANS;
-
-type PlanEntry = [PlanKey, (typeof PLANS)[PlanKey]];
 
 /* ============================================
    Constants
    ============================================ */
 
-const BILLING_OPTIONS: { value: BillingCycle; label: string }[] = [
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'annual', label: 'Annual' },
+const AUTO_EXPAND_TABLE = [
+  { range: '1 - 500', blocks: 1, cost: '$55' },
+  { range: '501 - 1,000', blocks: 2, cost: '$110' },
+  { range: '1,001 - 1,500', blocks: 3, cost: '$165' },
 ];
 
-const PLAN_ORDER: PlanKey[] = ['starter', 'business', 'enterprise'];
+const DAYPASS_EXPAND_TABLE = [
+  { range: '1 - 5', blocks: 1, cost: '$9' },
+  { range: '6 - 10', blocks: 2, cost: '$18' },
+  { range: '11 - 15', blocks: 3, cost: '$27' },
+];
 
-const COMPARISON_FEATURES: {
-  category: string;
-  features: {
-    label: string;
-    starter: string | boolean;
-    business: string | boolean;
-    enterprise: string | boolean;
-  }[];
-}[] = [
+const AUTO_EXPAND_STEPS = [
   {
-    category: 'Volume',
-    features: [
-      { label: 'Faxes per month', starter: '100', business: '500', enterprise: 'Unlimited' },
-      { label: 'Recipients', starter: '5', business: '25', enterprise: 'Unlimited' },
-    ],
+    icon: Layers,
+    title: 'You get 500 faxes every month',
+    description:
+      'Your membership includes 500 faxes per billing cycle. Send, receive, and route all of them with AI.',
   },
+  {
+    icon: TrendingUp,
+    title: 'Exceed 500? We add another block automatically',
+    description:
+      'If your volume grows past 500, we add another 500-fax block for $55. No interruptions, no manual upgrades.',
+  },
+  {
+    icon: Calculator,
+    title: 'Simple formula, no surprises',
+    description: 'Your monthly cost is always ceil(usage / 500) x $55. You only pay for what you use.',
+  },
+];
+
+const FEATURE_GRID = [
   {
     category: 'Routing',
     features: [
-      { label: 'Smart routing', starter: true, business: true, enterprise: true },
-      { label: 'Priority detection', starter: true, business: true, enterprise: true },
-      { label: 'Priority routing', starter: false, business: true, enterprise: true },
-      { label: 'Custom routing rules', starter: false, business: false, enterprise: true },
+      'AI-powered routing',
+      'Priority detection',
+      'Priority routing',
+      'Custom routing rules',
     ],
   },
   {
     category: 'Delivery',
     features: [
-      { label: 'Email delivery', starter: true, business: true, enterprise: true },
-      { label: 'Direct integrations', starter: false, business: true, enterprise: true },
-      { label: 'Send faxes', starter: false, business: true, enterprise: true },
+      'Email delivery',
+      'Webhook integrations',
+      'Send faxes',
+      'Receive faxes',
     ],
   },
   {
     category: 'Dashboard & Reporting',
     features: [
-      { label: 'Dashboard access', starter: true, business: true, enterprise: true },
-      { label: 'Fax history & search', starter: true, business: true, enterprise: true },
-      { label: 'Export reports', starter: false, business: true, enterprise: true },
-      { label: 'Custom analytics', starter: false, business: false, enterprise: true },
+      'Full dashboard access',
+      'Fax history & search',
+      'Export reports',
+      'Custom analytics',
     ],
   },
   {
     category: 'Support',
     features: [
-      { label: 'Email support', starter: true, business: true, enterprise: true },
-      { label: 'Priority support', starter: false, business: true, enterprise: true },
-      { label: 'Dedicated account manager', starter: false, business: false, enterprise: true },
-      { label: 'Custom onboarding', starter: false, business: false, enterprise: true },
+      'Priority support',
+      'Dedicated onboarding',
+      'API access',
+      'Custom integrations',
     ],
   },
 ];
 
 const FAQ_ITEMS = [
   {
-    question: 'Can I change plans anytime?',
+    question: 'What\'s the difference between Day Pass and Membership?',
     answer:
-      'Yes. You can upgrade or downgrade at any time from your billing settings. When you upgrade, the new features are available immediately. When you downgrade, your current plan stays active until the end of your billing cycle.',
+      'Day Pass gives you 5 documents and 8 hours of access for $9 — perfect for quick one-off jobs. Membership gives you 500 faxes per month for $55 — built for offices and businesses that fax regularly. Both include all features and both auto-expand if you need more.',
   },
   {
-    question: 'What happens if I go over my fax limit?',
+    question: 'What happens if I go over 500 faxes?',
     answer:
-      'We will notify you when you reach 80% and 100% of your monthly limit. Once you hit the limit, incoming faxes are queued and you can upgrade to continue processing immediately. No faxes are lost.',
-  },
-  {
-    question: 'How does annual billing work?',
-    answer:
-      'Annual billing is charged once per year, upfront. You save up to 20% compared to monthly billing. If you cancel mid-year, your plan stays active through the end of the prepaid period.',
-  },
-  {
-    question: 'Can I switch plans later?',
-    answer:
-      'Yes. You can upgrade or downgrade at any time from your billing settings. Changes take effect at the start of your next billing period.',
+      'We automatically add another 500-fax block for $55. There is no interruption to your service. Your monthly bill is always ceil(usage / 500) x $55, so you only pay for what you actually use.',
   },
   {
     question: 'How do I cancel?',
     answer:
-      'You can cancel anytime from your billing settings. There are no cancellation fees or contracts. Your plan stays active through the end of your current billing period.',
+      'Cancel anytime from your billing settings. There are no cancellation fees and no contracts. Your account stays active through the end of your current billing period.',
   },
   {
-    question: 'Do you offer discounts for nonprofits or community clinics?',
+    question: 'Do you offer discounts for nonprofits?',
     answer:
       'Yes. We offer special pricing for nonprofits, community health centers, and rural clinics. Contact our team and we will work something out.',
   },
   {
     question: 'What payment methods do you accept?',
     answer:
-      'We accept all major credit cards (Visa, Mastercard, American Express) and can arrange invoicing for Enterprise plans.',
+      'We accept all major credit cards including Visa, Mastercard, and American Express.',
   },
   {
-    question: 'What if I need more than 500 faxes but fewer than unlimited?',
+    question: 'Can I send AND receive faxes?',
     answer:
-      'Contact us. We can create a custom plan that fits your volume exactly. No need to pay for more than you use.',
+      'Yes. Your FaxBella Membership includes both inbound and outbound faxing. AI routing applies to incoming faxes, and you can send faxes to any number from your dashboard.',
+  },
+  {
+    question: 'Is there a free trial?',
+    answer:
+      'Contact us for a personalized demo. We will walk you through the platform and show you how AI routing works with your workflow.',
   },
 ];
-
-/* ============================================
-   Helper Functions
-   ============================================ */
-
-function isFeaturedPlan(plan: (typeof PLANS)[PlanKey]): boolean {
-  return 'featured' in plan && Boolean(plan.featured);
-}
-
-function getDisplayPrice(price: number): string {
-  return price === Infinity ? 'Custom' : `$${price}`;
-}
-
-function getAnnualSavings(monthlyPrice: number, annualPrice: number): number {
-  return (monthlyPrice - annualPrice) * 12;
-}
-
-function getCtaLabel(price: number): string {
-  return price === Infinity ? 'Contact Sales' : 'Get Started';
-}
-
-function getCtaHref(key: string): string {
-  return key === 'enterprise' ? `mailto:${SITE_CONFIG.supportEmail}` : `${ROUTES.signup}?plan=${key}`;
-}
 
 /* ============================================
    FAQ Accordion Item
@@ -209,21 +184,71 @@ function FaqItem({
 }
 
 /* ============================================
-   Comparison Cell Renderer
+   Expand Table Component
    ============================================ */
 
-function ComparisonCell({ value }: { value: string | boolean }) {
-  if (typeof value === 'boolean') {
-    return value ? (
-      <Check className="w-4 h-4 text-[var(--color-vc-accent)]" />
-    ) : (
-      <X className="w-4 h-4 text-[var(--color-vc-border)]" />
-    );
-  }
+function ExpandTable({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: { range: string; blocks: number; cost: string }[];
+}) {
   return (
-    <span className="text-sm font-medium text-[var(--color-vc-primary)]">
-      {value}
-    </span>
+    <div className="overflow-hidden rounded-xl border border-[var(--color-vc-border)] bg-white shadow-[var(--shadow-lg)]">
+      {/* Table Title */}
+      <div className="bg-[var(--color-vc-surface)] border-b border-[var(--color-vc-border)] px-6 py-3">
+        <span className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-vc-primary)] font-bold">
+          {title}
+        </span>
+      </div>
+      {/* Table Header */}
+      <div className="grid grid-cols-3 bg-[var(--color-vc-surface)] border-b-2 border-[var(--color-vc-border)]">
+        <div className="px-6 py-3">
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)] font-bold">
+            Usage
+          </span>
+        </div>
+        <div className="px-6 py-3 text-center">
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)] font-bold">
+            Blocks
+          </span>
+        </div>
+        <div className="px-6 py-3 text-right">
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)] font-bold">
+            Cost
+          </span>
+        </div>
+      </div>
+
+      {/* Table Rows */}
+      {rows.map((row, idx) => (
+        <div
+          key={row.range}
+          className={`grid grid-cols-3 ${
+            idx < rows.length - 1
+              ? 'border-b border-[var(--color-vc-border)]'
+              : ''
+          } ${idx === 0 ? 'bg-[var(--color-vc-accent)]/[0.03]' : ''}`}
+        >
+          <div className="px-6 py-4">
+            <span className="text-sm font-medium text-[var(--color-vc-primary)]">
+              {row.range}
+            </span>
+          </div>
+          <div className="px-6 py-4 text-center">
+            <span className="text-sm text-[var(--color-vc-text-secondary)]">
+              {row.blocks}
+            </span>
+          </div>
+          <div className="px-6 py-4 text-right">
+            <span className="text-sm font-bold text-[var(--color-vc-primary)]">
+              {row.cost}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -232,13 +257,7 @@ function ComparisonCell({ value }: { value: string | boolean }) {
    ============================================ */
 
 export default function PricingPage() {
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  const planEntries = PLAN_ORDER.map(
-    (key) => [key, PLANS[key]] as PlanEntry
-  );
-  const isAnnual = billingCycle === 'annual';
 
   return (
     <div className="min-h-screen bg-[var(--color-vc-bg)] text-[var(--color-vc-text)] antialiased">
@@ -283,48 +302,17 @@ export default function PricingPage() {
 
             {/* Headline */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[0.92] tracking-tight text-[var(--color-vc-text-on-dark)] max-w-5xl">
-              Simple, transparent
+              Two ways in
+              <span className="text-[var(--color-vc-accent)]">.</span>
               <br />
-              pricing
+              Your call
               <span className="text-[var(--color-vc-accent)]">.</span>
             </h1>
 
             {/* Subtitle */}
             <p className="mt-8 text-base md:text-lg text-[var(--color-vc-text-tertiary)] max-w-2xl leading-relaxed">
-              No hidden fees. No long-term contracts. Pick the plan that fits your
-              office and get started today.
+              Day pass for quick jobs. Membership for the long haul.
             </p>
-
-            {/* Billing Toggle */}
-            <div className="mt-12 flex items-center gap-3">
-              <div
-                className="inline-flex items-center gap-1 p-1 rounded-full border border-white/[0.08] bg-white/[0.04]"
-                role="radiogroup"
-                aria-label="Billing cycle"
-              >
-                {BILLING_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={billingCycle === option.value}
-                    onClick={() => setBillingCycle(option.value)}
-                    className={`font-mono text-xs uppercase tracking-[0.15em] px-5 py-2.5 rounded-full transition-all duration-200 ${
-                      billingCycle === option.value
-                        ? 'bg-[var(--color-vc-accent)] text-white shadow-[var(--shadow-glow-accent)]'
-                        : 'text-[var(--color-vc-text-tertiary)] hover:text-[var(--color-vc-text-on-dark)]'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              {isAnnual && (
-                <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--color-vc-accent)]">
-                  Save up to 20%
-                </span>
-              )}
-            </div>
 
             {/* Bottom accent line */}
             <div className="mt-20 md:mt-28 border-t border-white/[0.06]" />
@@ -332,7 +320,7 @@ export default function PricingPage() {
         </section>
 
         {/* ============================================
-           PLAN CARDS
+           TWO PLAN CARDS
            ============================================ */}
         <section className="py-20 md:py-28 bg-[var(--color-vc-surface)]">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -346,137 +334,132 @@ export default function PricingPage() {
                 <span className="accent-line w-12" />
               </div>
               <h2 className="text-3xl md:text-5xl font-black tracking-tight text-[var(--color-vc-primary)] leading-[1.1]">
-                Pick a plan, start routing
+                Pick your path
                 <span className="text-[var(--color-vc-accent)]">.</span>
               </h2>
             </div>
 
-            {/* Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[var(--color-vc-border)] rounded-xl overflow-hidden shadow-[var(--shadow-xl)]">
-              {planEntries.map(([key, plan]) => {
-                const featured = isFeaturedPlan(plan);
-                const price = isAnnual ? plan.priceAnnual : plan.price;
-                const displayPrice = getDisplayPrice(price);
-                const priceIsFinite = price !== Infinity;
-                const savings = getAnnualSavings(plan.price, plan.priceAnnual);
+            {/* Two Plan Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+              {/* ---- Day Pass Card ---- */}
+              <article className="relative bg-white p-8 md:p-10 rounded-xl border border-[var(--color-vc-border)] shadow-[var(--shadow-lg)] flex flex-col">
+                {/* Quick Access tag */}
+                <div className="absolute top-0 right-0 bg-[var(--color-vc-surface)] text-[var(--color-vc-text-secondary)] font-mono text-[10px] uppercase tracking-[0.15em] px-4 py-1.5 rounded-bl-lg border-b border-l border-[var(--color-vc-border)]">
+                  Quick Access
+                </div>
 
-                return (
-                  <article
-                    key={key}
-                    className={`relative bg-white p-8 md:p-10 flex flex-col ${
-                      featured ? 'ring-2 ring-[var(--color-vc-accent)] ring-inset' : ''
-                    }`}
-                  >
-                    {/* Featured badge */}
-                    {featured && (
-                      <div className="absolute top-0 right-0 bg-[var(--color-vc-accent)] text-white font-mono text-[10px] uppercase tracking-[0.15em] px-4 py-1.5">
-                        Most Popular
-                      </div>
-                    )}
+                {/* Accent line */}
+                <div className="w-10 h-[3px] rounded-full mb-8 bg-[var(--color-vc-border)]" />
 
-                    {/* Accent line */}
-                    <div
-                      className={`w-10 h-[3px] rounded-full mb-8 ${
-                        featured
-                          ? 'bg-[var(--color-vc-accent)]'
-                          : 'bg-[var(--color-vc-border)]'
-                      }`}
-                    />
+                {/* Plan name */}
+                <span className="mono-label">{DAY_PASS.name}</span>
 
-                    {/* Plan name */}
-                    <span className="mono-label">{plan.name}</span>
+                {/* Price */}
+                <div className="mt-4 mb-2">
+                  <span className="font-mono text-4xl md:text-5xl font-black text-[var(--color-vc-primary)] tracking-tight">
+                    ${DAY_PASS.price}
+                  </span>
+                  <span className="font-mono text-sm text-[var(--color-vc-text-tertiary)] ml-1">
+                    /day
+                  </span>
+                </div>
 
-                    {/* Price */}
-                    <div className="mt-4 mb-2">
-                      <span className="font-mono text-4xl md:text-5xl font-black text-[var(--color-vc-primary)] tracking-tight">
-                        {displayPrice}
+                {/* Billing note */}
+                <div className="mb-8 flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-[var(--color-vc-text-tertiary)]" />
+                  <p className="font-mono text-xs text-[var(--color-vc-text-tertiary)]">
+                    5 documents &middot; 8-hour window
+                  </p>
+                </div>
+
+                {/* Features */}
+                <ul className="flex-1 space-y-3 mb-10">
+                  {DAY_PASS.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-[var(--color-vc-text-tertiary)]/[0.08]">
+                        <Check className="w-3 h-3 text-[var(--color-vc-text-tertiary)]" />
                       </span>
-                      {priceIsFinite && (
-                        <span className="font-mono text-sm text-[var(--color-vc-text-tertiary)] ml-1">
-                          /mo
-                        </span>
-                      )}
-                    </div>
+                      <span className="text-sm text-[var(--color-vc-text-secondary)]">
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
 
-                    {/* Annual savings or billing note */}
-                    <div className="mb-8 h-6">
-                      {isAnnual && priceIsFinite ? (
-                        <p className="font-mono text-xs text-[var(--color-vc-accent)] font-bold">
-                          Save ${savings} per year
-                        </p>
-                      ) : priceIsFinite ? (
-                        <p className="font-mono text-xs text-[var(--color-vc-text-tertiary)]">
-                          Billed monthly
-                        </p>
-                      ) : (
-                        <p className="font-mono text-xs text-[var(--color-vc-text-tertiary)]">
-                          Custom pricing for your team
-                        </p>
-                      )}
-                    </div>
+                {/* CTA — outlined */}
+                <Link
+                  href={`${ROUTES.signup}?plan=daypass`}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border-2 border-[var(--color-vc-primary)] text-[var(--color-vc-primary)] font-medium text-sm rounded-full hover:bg-[var(--color-vc-primary)] hover:text-white transition-all duration-200"
+                >
+                  Get a Day Pass
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </article>
 
-                    {/* Features */}
-                    <ul className="flex-1 space-y-3 mb-10">
-                      {plan.features.map((feature) => {
-                        const displayFeature = feature
-                          .replace('AI-powered routing', 'Smart routing')
-                          .replace('Email + webhook delivery', 'Email + direct integrations')
-                          .replace('API access', 'Full platform access')
-                          .replace('Custom integrations', 'Custom integrations')
-                          .replace('Custom AI training', 'Custom routing rules');
+              {/* ---- Membership Card (Featured) ---- */}
+              <article className="relative bg-white p-8 md:p-10 rounded-xl ring-2 ring-[var(--color-vc-accent)] shadow-[var(--shadow-xl)] flex flex-col">
+                {/* Badge */}
+                <div className="absolute top-0 right-0 bg-[var(--color-vc-accent)] text-white font-mono text-[10px] uppercase tracking-[0.15em] px-4 py-1.5 rounded-bl-lg">
+                  Best Value
+                </div>
 
-                        return (
-                          <li key={feature} className="flex items-start gap-3">
-                            <span
-                              className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                                featured
-                                  ? 'bg-[var(--color-vc-accent)]/[0.08]'
-                                  : 'bg-[var(--color-vc-surface)]'
-                              }`}
-                            >
-                              <Check
-                                className={`w-3 h-3 ${
-                                  featured
-                                    ? 'text-[var(--color-vc-accent)]'
-                                    : 'text-[var(--color-vc-text-tertiary)]'
-                                }`}
-                              />
-                            </span>
-                            <span className="text-sm text-[var(--color-vc-text-secondary)]">
-                              {displayFeature}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                {/* Accent line */}
+                <div className="w-10 h-[3px] rounded-full mb-8 bg-[var(--color-vc-accent)]" />
 
-                    {/* CTA */}
-                    {featured ? (
-                      <Link
-                        href={getCtaHref(key)}
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[var(--color-vc-accent)] text-white font-medium text-sm rounded-full shadow-[var(--shadow-glow-accent)] hover:scale-[1.03] transition-all duration-200"
-                      >
-                        {getCtaLabel(price)}
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    ) : (
-                      <Link
-                        href={getCtaHref(key)}
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border-2 border-[var(--color-vc-border)] text-[var(--color-vc-primary)] font-medium text-sm rounded-full hover:border-[var(--color-vc-primary)] transition-colors duration-200"
-                      >
-                        {getCtaLabel(price)}
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    )}
-                  </article>
-                );
-              })}
+                {/* Plan name */}
+                <span className="mono-label">{PLAN.name}</span>
+
+                {/* Price */}
+                <div className="mt-4 mb-2">
+                  <span className="font-mono text-4xl md:text-5xl font-black text-[var(--color-vc-primary)] tracking-tight">
+                    ${PLAN.price}
+                  </span>
+                  <span className="font-mono text-sm text-[var(--color-vc-text-tertiary)] ml-1">
+                    /mo
+                  </span>
+                </div>
+
+                {/* Billing note */}
+                <div className="mb-8">
+                  <p className="font-mono text-xs text-[var(--color-vc-text-tertiary)]">
+                    {PLAN.faxBlock} faxes included &middot; Cancel anytime
+                  </p>
+                </div>
+
+                {/* Features */}
+                <ul className="flex-1 space-y-3 mb-10">
+                  {PLAN.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-[var(--color-vc-accent)]/[0.08]">
+                        <Check className="w-3 h-3 text-[var(--color-vc-accent)]" />
+                      </span>
+                      <span className="text-sm text-[var(--color-vc-text-secondary)]">
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA — filled */}
+                <Link
+                  href={ROUTES.signup}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[var(--color-vc-accent)] text-white font-medium text-sm rounded-full shadow-[var(--shadow-glow-accent)] hover:scale-[1.03] transition-all duration-200"
+                >
+                  Get Started
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </article>
             </div>
+
+            {/* Below-card note */}
+            <p className="mt-8 text-center text-sm text-[var(--color-vc-text-secondary)] leading-relaxed max-w-md mx-auto">
+              Both plans auto-expand. Need more? We add blocks automatically as you grow.
+            </p>
           </div>
         </section>
 
         {/* ============================================
-           FEATURE COMPARISON TABLE
+           HOW AUTO-EXPAND WORKS
            ============================================ */}
         <section className="py-20 md:py-28 bg-[var(--color-vc-bg)]">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -485,173 +468,126 @@ export default function PricingPage() {
               <div className="flex items-center justify-center gap-3 mb-6">
                 <span className="accent-line w-12" />
                 <span className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)]">
-                  Compare Plans
+                  Auto-Expand
                 </span>
                 <span className="accent-line w-12" />
               </div>
               <h2 className="text-3xl md:text-5xl font-black tracking-tight text-[var(--color-vc-primary)] leading-[1.1]">
-                Everything you get, side by side
+                Grow without thinking about it
                 <span className="text-[var(--color-vc-accent)]">.</span>
               </h2>
+              <p className="mt-6 text-base text-[var(--color-vc-text-secondary)] max-w-xl mx-auto leading-relaxed">
+                Both plans auto-expand. Same formula, different block sizes.
+              </p>
             </div>
 
-            {/* Comparison Table — Desktop */}
-            <div className="hidden md:block overflow-hidden rounded-xl border border-[var(--color-vc-border)] bg-white shadow-[var(--shadow-lg)]">
-              {/* Table Header */}
-              <div className="grid grid-cols-4 border-b-2 border-[var(--color-vc-border)]">
-                <div className="p-6 bg-[var(--color-vc-surface)]">
-                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)]">
-                    Features
-                  </span>
-                </div>
-                {planEntries.map(([key, plan]) => {
-                  const featured = isFeaturedPlan(plan);
-                  return (
-                    <div
-                      key={key}
-                      className={`p-6 text-center ${
-                        featured
-                          ? 'bg-[var(--color-vc-accent)]/[0.04] border-x-2 border-[var(--color-vc-accent)]'
-                          : 'bg-[var(--color-vc-surface)]'
-                      }`}
-                    >
-                      <span className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)]">
-                        {plan.name}
-                      </span>
-                      <p className="mt-2 font-mono text-2xl font-black text-[var(--color-vc-primary)]">
-                        {getDisplayPrice(isAnnual ? plan.priceAnnual : plan.price)}
-                        {plan.price !== Infinity && (
-                          <span className="text-sm font-normal text-[var(--color-vc-text-tertiary)]">
-                            /mo
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Table Body */}
-              {COMPARISON_FEATURES.map((category) => (
-                <div key={category.category}>
-                  {/* Category header */}
-                  <div className="grid grid-cols-4 bg-[var(--color-vc-surface)]">
-                    <div className="px-6 py-3 col-span-4">
-                      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-vc-accent)] font-bold">
-                        {category.category}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Feature rows */}
-                  {category.features.map((feature, featureIdx) => (
-                    <div
-                      key={feature.label}
-                      className={`grid grid-cols-4 ${
-                        featureIdx < category.features.length - 1
-                          ? 'border-b border-[var(--color-vc-border)]'
-                          : ''
-                      }`}
-                    >
-                      <div className="px-6 py-4 flex items-center">
-                        <span className="text-sm text-[var(--color-vc-text-secondary)]">
-                          {feature.label}
-                        </span>
-                      </div>
-                      {(['starter', 'business', 'enterprise'] as PlanKey[]).map((planKey) => {
-                        const isBusiness = planKey === 'business';
-                        return (
-                          <div
-                            key={planKey}
-                            className={`px-6 py-4 flex items-center justify-center ${
-                              isBusiness
-                                ? 'bg-[var(--color-vc-accent)]/[0.02] border-x border-[var(--color-vc-accent)]/20'
-                                : ''
-                            }`}
-                          >
-                            <ComparisonCell value={feature[planKey]} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-              ))}
-
-              {/* Table Footer — CTAs */}
-              <div className="grid grid-cols-4 border-t-2 border-[var(--color-vc-border)]">
-                <div className="p-6 bg-[var(--color-vc-surface)]" />
-                {planEntries.map(([key, plan]) => {
-                  const featured = isFeaturedPlan(plan);
-                  const price = isAnnual ? plan.priceAnnual : plan.price;
-                  return (
-                    <div
-                      key={key}
-                      className={`p-6 flex items-center justify-center ${
-                        featured
-                          ? 'bg-[var(--color-vc-accent)]/[0.04] border-x-2 border-b-2 border-[var(--color-vc-accent)] rounded-b-xl'
-                          : 'bg-[var(--color-vc-surface)]'
-                      }`}
-                    >
-                      {featured ? (
-                        <Link
-                          href={getCtaHref(key)}
-                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-vc-accent)] text-white font-medium text-sm rounded-full shadow-[var(--shadow-glow-accent)] hover:scale-[1.03] transition-all duration-200"
-                        >
-                          {getCtaLabel(price)}
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
-                      ) : (
-                        <Link
-                          href={getCtaHref(key)}
-                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border-2 border-[var(--color-vc-border)] text-[var(--color-vc-primary)] font-medium text-sm rounded-full hover:border-[var(--color-vc-primary)] transition-colors duration-200"
-                        >
-                          {getCtaLabel(price)}
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Comparison Table — Mobile (stacked cards) */}
-            <div className="md:hidden space-y-6">
-              {COMPARISON_FEATURES.map((category) => (
-                <div
-                  key={category.category}
-                  className="rounded-xl border border-[var(--color-vc-border)] bg-white overflow-hidden"
-                >
-                  {/* Category header */}
-                  <div className="px-5 py-3 bg-[var(--color-vc-surface)] border-b border-[var(--color-vc-border)]">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-vc-accent)] font-bold">
-                      {category.category}
+            {/* 3-Step Explanation */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 mb-16 md:mb-20">
+              {AUTO_EXPAND_STEPS.map((step, idx) => {
+                const StepIcon = step.icon;
+                return (
+                  <div
+                    key={step.title}
+                    className="relative bg-white rounded-xl border border-[var(--color-vc-border)] p-8 flex flex-col"
+                  >
+                    {/* Step number */}
+                    <span className="absolute top-6 right-6 font-mono text-5xl font-black text-[var(--color-vc-surface)] leading-none select-none">
+                      {String(idx + 1).padStart(2, '0')}
                     </span>
-                  </div>
 
-                  {/* Feature rows */}
-                  <div className="divide-y divide-[var(--color-vc-border)]">
-                    {category.features.map((feature) => (
-                      <div key={feature.label} className="px-5 py-4">
-                        <p className="text-sm font-medium text-[var(--color-vc-primary)] mb-3">
-                          {feature.label}
-                        </p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {(['starter', 'business', 'enterprise'] as PlanKey[]).map((planKey) => (
-                            <div key={planKey} className="text-center">
-                              <span className="block font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--color-vc-text-tertiary)] mb-1">
-                                {PLANS[planKey].name}
-                              </span>
-                              <div className="flex justify-center">
-                                <ComparisonCell value={feature[planKey]} />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                    <div className="w-10 h-10 rounded-full bg-[var(--color-vc-accent)]/[0.08] flex items-center justify-center mb-6">
+                      <StepIcon className="w-5 h-5 text-[var(--color-vc-accent)]" />
+                    </div>
+
+                    <h3 className="text-base font-bold text-[var(--color-vc-primary)] mb-3 pr-8">
+                      {step.title}
+                    </h3>
+                    <p className="text-sm text-[var(--color-vc-text-secondary)] leading-relaxed">
+                      {step.description}
+                    </p>
                   </div>
+                );
+              })}
+            </div>
+
+            {/* Formula callouts — side by side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-12">
+              <div className="text-center">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)] font-bold">
+                  Day Pass
+                </span>
+                <div className="mt-2 inline-block bg-[var(--color-vc-surface-dark)] rounded-lg px-6 py-3">
+                  <code className="font-mono text-sm text-[var(--color-vc-text-on-dark)]">
+                    ceil(docs / 5) &times; $9
+                  </code>
+                </div>
+              </div>
+              <div className="text-center">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)] font-bold">
+                  Membership
+                </span>
+                <div className="mt-2 inline-block bg-[var(--color-vc-surface-dark)] rounded-lg px-6 py-3">
+                  <code className="font-mono text-sm text-[var(--color-vc-text-on-dark)]">
+                    ceil(faxes / 500) &times; $55
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            {/* Visual Example Tables — side by side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <ExpandTable title="Day Pass" rows={DAYPASS_EXPAND_TABLE} />
+              <ExpandTable title="Membership" rows={AUTO_EXPAND_TABLE} />
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================
+           EVERYTHING INCLUDED — FEATURE GRID
+           ============================================ */}
+        <section className="py-20 md:py-28 bg-[var(--color-vc-surface)]">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            {/* Section Header */}
+            <div className="text-center mb-16 md:mb-20">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <span className="accent-line w-12" />
+                <span className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)]">
+                  All Features
+                </span>
+                <span className="accent-line w-12" />
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-[var(--color-vc-primary)] leading-[1.1]">
+                Everything, for everyone
+                <span className="text-[var(--color-vc-accent)]">.</span>
+              </h2>
+              <p className="mt-6 text-base text-[var(--color-vc-text-secondary)] max-w-xl mx-auto leading-relaxed">
+                No feature tiers. No add-ons. Every FaxBella member gets full
+                access to every capability from day one.
+              </p>
+            </div>
+
+            {/* Feature Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {FEATURE_GRID.map((group) => (
+                <div
+                  key={group.category}
+                  className="bg-white rounded-xl border border-[var(--color-vc-border)] p-6"
+                >
+                  {/* Category label */}
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-vc-accent)] font-bold">
+                    {group.category}
+                  </span>
+
+                  <ul className="mt-5 space-y-3">
+                    {group.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3">
+                        <Check className="w-4 h-4 text-[var(--color-vc-accent)] shrink-0 mt-0.5" />
+                        <span className="text-sm text-[var(--color-vc-text-secondary)]">
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ))}
             </div>
@@ -661,7 +597,7 @@ export default function PricingPage() {
         {/* ============================================
            TRUST / FLEXIBILITY
            ============================================ */}
-        <section className="py-16 md:py-20 bg-[var(--color-vc-surface)] border-y border-[var(--color-vc-border)]">
+        <section className="py-16 md:py-20 bg-[var(--color-vc-bg)] border-y border-[var(--color-vc-border)]">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-vc-accent)]/[0.08] mb-6">
@@ -682,8 +618,9 @@ export default function PricingPage() {
               </h2>
 
               <p className="text-base text-[var(--color-vc-text-secondary)] leading-relaxed max-w-xl mx-auto">
-                No long-term contracts. No cancellation fees. Upgrade, downgrade,
-                or cancel from your billing settings whenever you need to.
+                No long-term contracts. No cancellation fees. Cancel from your
+                billing settings whenever you need to. Your account stays active
+                through the end of your current billing period.
               </p>
             </div>
           </div>

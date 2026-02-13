@@ -157,7 +157,7 @@ export default function SendFaxPage() {
 
   /* Subscribe handler */
   const handleSubscribe = useCallback(
-    async (plan: 'business' | 'enterprise') => {
+    async (plan: 'standard' | 'daypass') => {
       if (!data?.customer.email) return;
 
       setIsRedirecting(true);
@@ -314,7 +314,7 @@ export default function SendFaxPage() {
                 onFieldChange={updateField}
                 onFileSelected={handleFileSelected}
                 onFileRemoved={handleFileRemoved}
-                maxSizeMB={data.customer.plan === 'enterprise' ? 50 : 20}
+                maxSizeMB={50}
                 uploadProgress={uploadProgress}
                 uploadedFileName={uploadedFileName || undefined}
                 isSubmitting={status === 'submitting'}

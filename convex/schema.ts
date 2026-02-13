@@ -9,7 +9,7 @@ export default defineSchema({
         // Stripe
         stripeCustomerId: v.string(),
         stripeSubscriptionId: v.optional(v.string()),
-        plan: v.string(), // 'starter', 'business', 'enterprise'
+        plan: v.string(), // 'standard' (single-tier $55/mo per 500-fax block)
         planStatus: v.string(), // 'active', 'canceled', 'past_due'
         // HumbleFax credentials (optional - customer can use their own)
         humbleFaxAccessKey: v.optional(v.string()),

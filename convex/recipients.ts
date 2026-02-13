@@ -34,12 +34,14 @@ export const addRecipient = mutation({
             .collect();
 
         const limits: Record<string, number> = {
-            starter: 5,
-            business: 25,
+            standard: 999999,
+            daypass: 999999,
+            starter: 999999,
+            business: 999999,
             enterprise: 999999,
         };
 
-        if (existingRecipients.length >= (limits[customer.plan] || 5)) {
+        if (existingRecipients.length >= (limits[customer.plan] || 999999)) {
             throw new Error('Recipient limit reached. Please upgrade your plan.');
         }
 

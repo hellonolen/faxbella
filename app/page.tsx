@@ -22,7 +22,8 @@ import MarketingFooter from '@/components/marketing-footer';
 import {
   SITE_CONFIG,
   FEATURES,
-  PLANS,
+  PLAN,
+  DAY_PASS,
   STEPS,
   STATS_BAR,
   ROUTES,
@@ -53,10 +54,6 @@ const STAT_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>>
    Landing Page
    ============================================ */
 export default function LandingPage() {
-  const planEntries = Object.entries(PLANS) as [
-    string,
-    (typeof PLANS)[keyof typeof PLANS],
-  ][];
 
   return (
     <div className="min-h-screen bg-[var(--color-vc-bg)] text-[var(--color-vc-text)] antialiased">
@@ -485,98 +482,77 @@ export default function LandingPage() {
             </div>
 
             {/* Plan Cards Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[var(--color-vc-border)] rounded-xl overflow-hidden">
-              {planEntries.map(([key, plan]) => {
-                const isFeatured = 'featured' in plan && plan.featured;
-                const price =
-                  plan.price === Infinity ? 'Custom' : `$${plan.price}`;
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              {/* Day Pass */}
+              <div className="relative bg-white p-8 md:p-10 flex flex-col rounded-xl border border-[var(--color-vc-border)]">
+                <div className="w-10 h-[3px] rounded-full mb-8 bg-[var(--color-vc-border)]" />
+                <span className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)]">
+                  {DAY_PASS.name}
+                </span>
+                <div className="mt-4 mb-6">
+                  <span className="font-mono text-4xl md:text-5xl font-black text-[var(--color-vc-primary)] tracking-tight">
+                    ${DAY_PASS.price}
+                  </span>
+                  <span className="font-mono text-sm text-[var(--color-vc-text-tertiary)] ml-1">
+                    /day
+                  </span>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {DAY_PASS.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3 text-sm text-[var(--color-vc-text-secondary)]"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-vc-text-tertiary)] mt-1.5 shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={`${ROUTES.signup}?plan=daypass`}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border-2 border-[var(--color-vc-border)] text-[var(--color-vc-primary)] font-medium text-sm rounded-full hover:border-[var(--color-vc-primary)] transition-colors duration-200"
+                >
+                  Get a Day Pass
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
 
-                return (
-                  <div
-                    key={key}
-                    className={`relative bg-white p-8 md:p-10 flex flex-col ${
-                      isFeatured
-                        ? 'ring-2 ring-[var(--color-vc-accent)] ring-inset'
-                        : ''
-                    }`}
-                  >
-                    {/* Featured badge */}
-                    {isFeatured && (
-                      <div className="absolute top-0 right-0 bg-[var(--color-vc-accent)] text-white font-mono text-[10px] uppercase tracking-[0.15em] px-4 py-1.5">
-                        Popular
-                      </div>
-                    )}
-
-                    {/* Accent line */}
-                    <div
-                      className={`w-10 h-[3px] rounded-full mb-8 ${
-                        isFeatured
-                          ? 'bg-[var(--color-vc-accent)]'
-                          : 'bg-[var(--color-vc-border)]'
-                      }`}
-                    />
-
-                    {/* Plan name */}
-                    <span className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)]">
-                      {plan.name}
-                    </span>
-
-                    {/* Price */}
-                    <div className="mt-4 mb-6">
-                      <span className="font-mono text-4xl md:text-5xl font-black text-[var(--color-vc-primary)] tracking-tight">
-                        {price}
-                      </span>
-                      {plan.price !== Infinity && (
-                        <span className="font-mono text-sm text-[var(--color-vc-text-tertiary)] ml-1">
-                          /mo
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Features */}
-                    <ul className="space-y-3 mb-8 flex-1">
-                      {plan.features.map((feature) => (
-                        <li
-                          key={feature}
-                          className="flex items-start gap-3 text-sm text-[var(--color-vc-text-secondary)]"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-vc-accent)] mt-1.5 shrink-0" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-
-                    {/* CTA */}
-                    {isFeatured ? (
-                      <Link
-                        href={
-                          plan.price === Infinity
-                            ? `mailto:${SITE_CONFIG.supportEmail}`
-                            : `${ROUTES.signup}?plan=${key}`
-                        }
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[var(--color-vc-accent)] text-white font-medium text-sm rounded-full shadow-[var(--shadow-glow-accent)] hover:scale-[1.03] transition-all duration-200"
-                      >
-                        Get Started
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    ) : (
-                      <Link
-                        href={
-                          plan.price === Infinity
-                            ? `mailto:${SITE_CONFIG.supportEmail}`
-                            : `${ROUTES.signup}?plan=${key}`
-                        }
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border-2 border-[var(--color-vc-border)] text-[var(--color-vc-primary)] font-medium text-sm rounded-full hover:border-[var(--color-vc-primary)] transition-colors duration-200"
-                      >
-                        {plan.price === Infinity
-                          ? 'Contact Sales'
-                          : 'Get Started'}
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    )}
-                  </div>
-                );
-              })}
+              {/* Membership */}
+              <div className="relative bg-white p-8 md:p-10 flex flex-col rounded-xl ring-2 ring-[var(--color-vc-accent)]">
+                <div className="absolute top-0 right-0 bg-[var(--color-vc-accent)] text-white font-mono text-[10px] uppercase tracking-[0.15em] px-4 py-1.5 rounded-bl-lg">
+                  Best Value
+                </div>
+                <div className="w-10 h-[3px] rounded-full mb-8 bg-[var(--color-vc-accent)]" />
+                <span className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-vc-text-tertiary)]">
+                  {PLAN.name}
+                </span>
+                <div className="mt-4 mb-6">
+                  <span className="font-mono text-4xl md:text-5xl font-black text-[var(--color-vc-primary)] tracking-tight">
+                    ${PLAN.price}
+                  </span>
+                  <span className="font-mono text-sm text-[var(--color-vc-text-tertiary)] ml-1">
+                    /mo
+                  </span>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {PLAN.features.slice(0, 6).map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3 text-sm text-[var(--color-vc-text-secondary)]"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-vc-accent)] mt-1.5 shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={ROUTES.signup}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[var(--color-vc-accent)] text-white font-medium text-sm rounded-full shadow-[var(--shadow-glow-accent)] hover:scale-[1.03] transition-all duration-200"
+                >
+                  Get Started
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
 
             {/* See all plans link */}
@@ -585,7 +561,7 @@ export default function LandingPage() {
                 href={ROUTES.pricing}
                 className="inline-flex items-center gap-2 text-sm font-mono text-[var(--color-vc-accent)] hover:text-[var(--color-vc-accent-light)] transition-colors"
               >
-                Compare all plans and features
+                Compare plans and features
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>

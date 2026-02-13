@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { CreditCard, ArrowUpRight, ArrowDownRight, Check, ExternalLink } from 'lucide-react';
+import { CreditCard, ExternalLink, Info } from 'lucide-react';
 import { useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useDashboard } from '@/hooks/use-dashboard';
 import { usePasskey } from '@/hooks/use-passkey';
-import { PLANS } from '@/lib/constants';
+import { PLAN, DAY_PASS } from '@/lib/constants';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/loading';
@@ -21,13 +21,6 @@ const STATUS_STYLES: Record<string, { label: string; color: string; bg: string }
   canceled: { label: 'Canceled', color: 'var(--color-error)', bg: 'var(--color-error-light)' },
   past_due: { label: 'Past Due', color: 'var(--color-warning)', bg: 'var(--color-warning-light)' },
 };
-
-/* ----------------------------------------
-   Plan keys in display order
-   ---------------------------------------- */
-
-const PLAN_KEYS = ['starter', 'business', 'enterprise'] as const;
-type PlanKey = (typeof PLAN_KEYS)[number];
 
 /* ----------------------------------------
    Loading Skeleton
@@ -47,17 +40,12 @@ function BillingSkeleton() {
         <div className="space-y-4">
           <Skeleton width={100} height={14} />
           <Skeleton height={12} className="w-full" />
-          <Skeleton height={12} className="w-full" />
         </div>
       </Card>
       <Card>
         <div className="space-y-4">
-          <Skeleton width={120} height={14} />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} height={180} className="w-full" />
-            ))}
-          </div>
+          <Skeleton width={180} height={14} />
+          <Skeleton height={48} className="w-full" />
         </div>
       </Card>
     </div>
@@ -69,8 +57,7 @@ function BillingSkeleton() {
    ---------------------------------------- */
 
 function UsageBar({ used, limit, label }: { used: number; limit: number; label: string }) {
-  const isUnlimited = !isFinite(limit);
-  const percentage = isUnlimited ? 0 : Math.min((used / limit) * 100, 100);
+  const percentage = Math.min((used / limit) * 100, 100);
   const isHigh = percentage >= 80;
 
   return (
@@ -83,7 +70,7 @@ function UsageBar({ used, limit, label }: { used: number; limit: number; label: 
             isHigh ? 'text-[var(--color-warning)]' : 'text-[var(--color-vc-text-secondary)]',
           )}
         >
-          {used} / {isUnlimited ? 'Unlimited' : limit}
+          {used} / {limit}
         </span>
       </div>
       <div
@@ -93,100 +80,11 @@ function UsageBar({ used, limit, label }: { used: number; limit: number; label: 
         <div
           className="h-full rounded-full transition-all duration-500 ease-out"
           style={{
-            width: isUnlimited ? '0%' : `${percentage}%`,
+            width: `${percentage}%`,
             background: isHigh ? 'var(--color-warning)' : 'var(--color-vc-accent)',
           }}
         />
       </div>
-    </div>
-  );
-}
-
-/* ----------------------------------------
-   Plan Card
-   ---------------------------------------- */
-
-function PlanCard({
-  planKey,
-  isCurrent,
-  currentPlanKey,
-  onUpgrade,
-  onDowngrade,
-  isLoading,
-}: {
-  planKey: PlanKey;
-  isCurrent: boolean;
-  currentPlanKey: PlanKey;
-  onUpgrade: (plan: PlanKey) => void;
-  onDowngrade: () => void;
-  isLoading: boolean;
-}) {
-  const plan = PLANS[planKey];
-  const currentIndex = PLAN_KEYS.indexOf(currentPlanKey);
-  const thisIndex = PLAN_KEYS.indexOf(planKey);
-  const isUpgrade = thisIndex > currentIndex;
-  const isDowngrade = thisIndex < currentIndex;
-  const isUnlimited = !isFinite(plan.price);
-
-  return (
-    <div
-      className={cn(
-        'rounded-[var(--radius-lg)] border p-5 transition-all duration-200',
-        isCurrent
-          ? 'border-[var(--color-vc-accent)] bg-[rgba(232,85,61,0.03)]'
-          : 'border-[var(--color-vc-border)] bg-white hover:border-[var(--color-vc-text-tertiary)]',
-      )}
-    >
-      {/* Plan name */}
-      <p className="mono-label mb-2">{plan.name}</p>
-
-      {/* Price */}
-      <p className="flex items-baseline gap-1 mb-4">
-        <span className="font-[family-name:var(--font-jetbrains)] text-2xl font-black text-[var(--color-vc-text)]">
-          ${isUnlimited ? '299' : plan.price}
-        </span>
-        <span className="text-xs text-[var(--color-vc-text-tertiary)]">/mo</span>
-      </p>
-
-      {/* Features */}
-      <ul className="space-y-2 mb-5">
-        {plan.features.slice(0, 4).map((feature) => (
-          <li key={feature} className="flex items-start gap-2 text-xs text-[var(--color-vc-text-secondary)]">
-            <Check
-              size={14}
-              className="mt-0.5 shrink-0"
-              style={{ color: isCurrent ? 'var(--color-vc-accent)' : 'var(--color-vc-text-tertiary)' }}
-              aria-hidden="true"
-            />
-            {feature}
-          </li>
-        ))}
-      </ul>
-
-      {/* CTA */}
-      {isCurrent ? (
-        <div
-          className="status-badge w-full justify-center"
-          style={{
-            color: 'var(--color-vc-accent)',
-            background: 'rgba(232, 85, 61, 0.08)',
-          }}
-        >
-          Current Plan
-        </div>
-      ) : (
-        <Button
-          variant={isUpgrade ? 'primary' : 'ghost'}
-          size="sm"
-          className="w-full"
-          onClick={() => isUpgrade ? onUpgrade(planKey) : onDowngrade()}
-          loading={isLoading}
-        >
-          {isUpgrade && <ArrowUpRight size={14} aria-hidden="true" />}
-          {isDowngrade && <ArrowDownRight size={14} aria-hidden="true" />}
-          {isUpgrade ? 'Upgrade' : 'Downgrade'}
-        </Button>
-      )}
     </div>
   );
 }
@@ -198,8 +96,8 @@ function PlanCard({
 export default function BillingPage() {
   const { data, isLoading: dashLoading } = useDashboard();
   const { isAuthenticated } = usePasskey();
-  const createCheckout = useAction(api.stripe.createCheckoutSession);
   const createPortal = useAction(api.stripe.createBillingPortalSession);
+  const createCheckout = useAction(api.stripe.createCheckoutSession);
 
   const [isPortalLoading, setIsPortalLoading] = useState(false);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
@@ -229,47 +127,51 @@ export default function BillingPage() {
     }
   }, [isDemo, data, createPortal]);
 
-  /* Create Stripe checkout for upgrade */
-  const handleUpgrade = useCallback(async (plan: PlanKey) => {
-    if (isDemo) {
-      setDemoMessage('Sign in to upgrade your plan');
-      return;
-    }
-    if (!data?.customer.email) return;
-
-    setIsCheckoutLoading(true);
-    try {
-      const result = await createCheckout({
-        email: data.customer.email,
-        plan,
-        billingCycle: 'monthly',
-        successUrl: `${window.location.origin}/dashboard/billing?payment=success`,
-        cancelUrl: `${window.location.origin}/dashboard/billing`,
-      });
-      if (result?.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
+  /* Subscribe to a plan */
+  const handleSubscribe = useCallback(
+    async (plan: 'standard' | 'daypass') => {
+      if (isDemo) {
+        setDemoMessage('Sign in to subscribe');
+        return;
       }
-    } catch {
-      setIsCheckoutLoading(false);
-    }
-  }, [isDemo, data, createCheckout]);
+      if (!data?.customer.email) return;
 
-  /* Downgrade via billing portal */
-  const handleDowngrade = useCallback(async () => {
-    if (isDemo) {
-      setDemoMessage('Sign in to manage your plan');
-      return;
-    }
-    await handleManageBilling();
-  }, [isDemo, handleManageBilling]);
+      setIsCheckoutLoading(true);
+      try {
+        const result = await createCheckout({
+          email: data.customer.email,
+          plan,
+          billingCycle: plan === 'daypass' ? 'one_time' : 'monthly',
+          successUrl: `${window.location.origin}/dashboard/billing?payment=success`,
+          cancelUrl: `${window.location.origin}/dashboard/billing`,
+        });
+        if (result?.checkoutUrl) {
+          window.location.href = result.checkoutUrl;
+        }
+      } catch {
+        setIsCheckoutLoading(false);
+      }
+    },
+    [isDemo, data, createCheckout],
+  );
 
   if (dashLoading || !data) {
     return <BillingSkeleton />;
   }
 
   const { customer } = data;
-  const planKey = (customer.plan?.toLowerCase() ?? 'starter') as PlanKey;
   const planStatus = STATUS_STYLES[customer.planStatus] ?? STATUS_STYLES.active;
+  const isSubscribed = customer.planStatus === 'active';
+  const isDayPass = customer.plan === 'daypass';
+
+  const planName = isDayPass ? DAY_PASS.name : PLAN.name;
+  const planPrice = isDayPass ? DAY_PASS.price : PLAN.price;
+  const planPeriod = isDayPass ? '/day' : '/month';
+  const planSubline = isDayPass
+    ? `${DAY_PASS.faxBlock} documents \u00B7 ${DAY_PASS.duration} window`
+    : `${PLAN.faxBlock} faxes included`;
+  const usageLimit = isDayPass ? DAY_PASS.faxBlock : PLAN.faxBlock;
+  const usageLabel = isDayPass ? 'Documents' : 'Faxes';
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -302,13 +204,16 @@ export default function BillingPage() {
           <div>
             <p className="mono-label mb-2">Current Plan</p>
             <p className="font-[family-name:var(--font-jetbrains)] text-2xl font-black text-[var(--color-vc-text)] leading-none mb-2">
-              {PLANS[planKey]?.name ?? customer.plan}
+              {planName}
             </p>
             <p className="flex items-baseline gap-1">
               <span className="text-lg font-semibold text-[var(--color-vc-text)]">
-                ${PLANS[planKey]?.price ?? '--'}
+                ${planPrice}
               </span>
-              <span className="text-xs text-[var(--color-vc-text-tertiary)]">/month</span>
+              <span className="text-xs text-[var(--color-vc-text-tertiary)]">{planPeriod}</span>
+            </p>
+            <p className="text-xs text-[var(--color-vc-text-tertiary)] mt-1">
+              {planSubline}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -323,7 +228,7 @@ export default function BillingPage() {
               />
               {planStatus.label}
             </div>
-            {customer.planStatus === 'active' && (
+            {isSubscribed ? (
               <Button
                 variant="secondary"
                 size="sm"
@@ -332,6 +237,15 @@ export default function BillingPage() {
               >
                 <ExternalLink size={14} aria-hidden="true" />
                 Manage Billing
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => handleSubscribe('standard')}
+                loading={isCheckoutLoading}
+              >
+                Subscribe
               </Button>
             )}
           </div>
@@ -346,39 +260,78 @@ export default function BillingPage() {
             className="text-[var(--color-vc-text-tertiary)]"
             aria-hidden="true"
           />
-          <p className="mono-label">Usage This Month</p>
+          <p className="mono-label">{isDayPass ? 'Usage This Session' : 'Usage This Month'}</p>
         </div>
         <div className="space-y-5">
           <UsageBar
             used={customer.faxesThisMonth}
-            limit={customer.faxesLimit}
-            label="Faxes"
+            limit={usageLimit}
+            label={usageLabel}
           />
-          <UsageBar
-            used={data.recipientsCount}
-            limit={customer.recipientLimit}
-            label="Recipients"
-          />
+          {!isDayPass && (
+            <div className="flex items-center justify-between">
+              <span className="mono-label">Recipients</span>
+              <span className="font-[family-name:var(--font-jetbrains)] text-xs font-medium text-[var(--color-vc-text-secondary)]">
+                {data.recipientsCount} / Unlimited
+              </span>
+            </div>
+          )}
         </div>
       </Card>
 
-      {/* All Plans */}
+      {/* Auto-Expand Info */}
       <Card>
-        <p className="mono-label mb-4">All Plans</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {PLAN_KEYS.map((key) => (
-            <PlanCard
-              key={key}
-              planKey={key}
-              isCurrent={key === planKey}
-              currentPlanKey={planKey}
-              onUpgrade={handleUpgrade}
-              onDowngrade={handleDowngrade}
-              isLoading={isCheckoutLoading || isPortalLoading}
+        <div className="flex items-start gap-3">
+          <div
+            className={cn(
+              'flex items-center justify-center shrink-0',
+              'w-8 h-8 rounded-full',
+              'bg-[var(--color-vc-surface)]',
+            )}
+          >
+            <Info
+              size={16}
+              className="text-[var(--color-vc-accent)]"
+              aria-hidden="true"
             />
-          ))}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[var(--color-vc-text)] mb-1">
+              Auto-Expand
+            </p>
+            <p className="text-sm text-[var(--color-vc-text-secondary)] leading-relaxed">
+              {isDayPass
+                ? `When you exceed ${DAY_PASS.faxBlock} documents, we auto-add another ${DAY_PASS.faxBlock}-doc block for $${DAY_PASS.price}.`
+                : `When you exceed ${PLAN.faxBlock} faxes, we automatically add another ${PLAN.faxBlock}-fax block for $${PLAN.price}.`}{' '}
+              You only pay for what you need.
+            </p>
+          </div>
         </div>
       </Card>
+
+      {/* Upgrade CTA for Day Pass users */}
+      {isDayPass && isSubscribed && (
+        <Card>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-sm font-semibold text-[var(--color-vc-text)] mb-1">
+                Upgrade to Membership
+              </p>
+              <p className="text-sm text-[var(--color-vc-text-secondary)] leading-relaxed">
+                Get the full membership for ${PLAN.price}/mo &mdash; {PLAN.faxBlock} faxes, all features.
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => handleSubscribe('standard')}
+              loading={isCheckoutLoading}
+            >
+              Upgrade to Membership
+            </Button>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

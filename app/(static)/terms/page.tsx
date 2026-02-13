@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import MarketingHeader from '@/components/marketing-header';
 import MarketingFooter from '@/components/marketing-footer';
-import { SITE_CONFIG, PLANS, ROUTES } from '@/lib/constants';
+import { SITE_CONFIG, PLAN, DAY_PASS, ROUTES } from '@/lib/constants';
 
 export const metadata: Metadata = {
     title: 'Terms of Service - FaxBella',
@@ -13,28 +13,7 @@ export const metadata: Metadata = {
 /* ============================================
    Plan data for pricing table
    ============================================ */
-const PLAN_ROWS = [
-    {
-        name: PLANS.starter.name,
-        price: `$${PLANS.starter.price}/month`,
-        faxes: String(PLANS.starter.faxLimit),
-        recipients: String(PLANS.starter.recipientLimit),
-    },
-    {
-        name: PLANS.business.name,
-        price: `$${PLANS.business.price}/month`,
-        faxes: String(PLANS.business.faxLimit),
-        recipients: String(PLANS.business.recipientLimit),
-    },
-    {
-        name: PLANS.enterprise.name,
-        price: `$${PLANS.enterprise.price}/month`,
-        faxes: 'Unlimited',
-        recipients: 'Unlimited',
-    },
-] as const;
-
-const TABLE_HEADERS = ['Plan', 'Price', 'Faxes/Month', 'Recipients'] as const;
+const TABLE_HEADERS = ['Plan', 'Price', 'Included', 'Overage'] as const;
 
 export default function TermsPage() {
     return (
@@ -128,33 +107,48 @@ export default function TermsPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {PLAN_ROWS.map((plan) => (
-                                        <tr
-                                            key={plan.name}
-                                            className="border-b border-[var(--color-vc-border)] last:border-b-0"
-                                        >
-                                            <td className="p-3 text-[var(--color-vc-text-secondary)]">
-                                                {plan.name}
-                                            </td>
-                                            <td className="p-3 text-[var(--color-vc-text-secondary)]">
-                                                {plan.price}
-                                            </td>
-                                            <td className="p-3 text-[var(--color-vc-text-secondary)]">
-                                                {plan.faxes}
-                                            </td>
-                                            <td className="p-3 text-[var(--color-vc-text-secondary)]">
-                                                {plan.recipients}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    <tr className="border-b border-[var(--color-vc-border)]">
+                                        <td className="p-3 text-[var(--color-vc-text-secondary)]">
+                                            {DAY_PASS.name}
+                                        </td>
+                                        <td className="p-3 text-[var(--color-vc-text-secondary)]">
+                                            ${DAY_PASS.price}/day
+                                        </td>
+                                        <td className="p-3 text-[var(--color-vc-text-secondary)]">
+                                            {DAY_PASS.faxBlock} documents, {DAY_PASS.duration} access, all features
+                                        </td>
+                                        <td className="p-3 text-[var(--color-vc-text-secondary)]">
+                                            Auto-add ${DAY_PASS.price} per {DAY_PASS.faxBlock}-document block
+                                        </td>
+                                    </tr>
+                                    <tr className="border-b border-[var(--color-vc-border)] last:border-b-0">
+                                        <td className="p-3 text-[var(--color-vc-text-secondary)]">
+                                            {PLAN.name}
+                                        </td>
+                                        <td className="p-3 text-[var(--color-vc-text-secondary)]">
+                                            ${PLAN.price}/month
+                                        </td>
+                                        <td className="p-3 text-[var(--color-vc-text-secondary)]">
+                                            {PLAN.faxBlock} faxes, unlimited recipients, all features
+                                        </td>
+                                        <td className="p-3 text-[var(--color-vc-text-secondary)]">
+                                            Auto-add ${PLAN.price} per {PLAN.faxBlock}-fax block
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p>
-                            Subscriptions are billed monthly. You may cancel at
-                            any time; access continues through the end of your
-                            billing period. We may adjust pricing with 30
-                            days&apos; written notice.
+                            {SITE_CONFIG.name} offers two pricing options: a
+                            one-time Day Pass (${DAY_PASS.price} for{' '}
+                            {DAY_PASS.faxBlock} documents within an{' '}
+                            {DAY_PASS.duration} window) and a monthly Membership
+                            (${PLAN.price}/month for {PLAN.faxBlock} faxes).
+                            When usage exceeds the included allowance, additional
+                            blocks are automatically added at the same rate. You
+                            may cancel the Membership at any time; access
+                            continues through the end of your billing period. We
+                            may adjust pricing with 30 days&apos; written notice.
                         </p>
 
                         {/* 4 */}
@@ -193,8 +187,8 @@ export default function TermsPage() {
                                 access to your account
                             </li>
                             <li>
-                                Exceed your plan&apos;s fax or recipient limits
-                                through automated means
+                                Manipulate usage tracking or circumvent
+                                auto-expand billing through automated means
                             </li>
                             <li>
                                 Use the Service to circumvent any fax-related

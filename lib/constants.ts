@@ -32,71 +32,52 @@ export const ROUTES = {
   billing: '/dashboard/billing',
 } as const;
 
-export const PLANS = {
-  starter: {
-    name: 'Starter',
-    price: 29,
-    priceAnnual: 24,
-    faxLimit: 100,
-    recipientLimit: 5,
-    features: [
-      '100 faxes per month',
-      '5 recipients',
-      'AI-powered routing',
-      'Email delivery',
-      'Dashboard access',
-      'Email support',
-    ],
-  },
-  business: {
-    name: 'Business',
-    price: 99,
-    priceAnnual: 82,
-    faxLimit: 500,
-    recipientLimit: 25,
-    featured: true,
-    features: [
-      '500 faxes per month',
-      '25 recipients',
-      'AI-powered routing',
-      'Email + webhook delivery',
-      'Priority routing',
-      'Send faxes',
-      'Priority support',
-    ],
-  },
-  enterprise: {
-    name: 'Enterprise',
-    price: 299,
-    priceAnnual: 249,
-    faxLimit: Infinity,
-    recipientLimit: Infinity,
-    features: [
-      'Unlimited faxes',
-      'Unlimited recipients',
-      'AI-powered routing',
-      'API access',
-      'Custom integrations',
-      'Send faxes',
-      'Dedicated support',
-      'Custom AI training',
-    ],
-  },
+export const PLAN = {
+  key: 'standard',
+  name: 'FaxBella Membership',
+  price: 55,
+  faxBlock: 500,
+  recipientLimit: Infinity,
+  features: [
+    '500 faxes per month',
+    'Unlimited recipients',
+    'AI-powered routing',
+    'Priority detection & routing',
+    'Email + webhook delivery',
+    'Send faxes',
+    'Full dashboard & analytics',
+    'Export reports',
+    'API access',
+    'Priority support',
+  ],
 } as const;
 
-export const STRIPE_PRICE_MAP: Record<string, Record<string, string>> = {
-  starter: {
-    monthly: 'STRIPE_PRICE_STARTER_MONTHLY',
-    annual: 'STRIPE_PRICE_STARTER_ANNUAL',
-  },
-  business: {
-    monthly: 'STRIPE_PRICE_BUSINESS_MONTHLY',
-    annual: 'STRIPE_PRICE_BUSINESS_ANNUAL',
-  },
-  enterprise: {
-    monthly: 'STRIPE_PRICE_ENTERPRISE_MONTHLY',
-    annual: 'STRIPE_PRICE_ENTERPRISE_ANNUAL',
-  },
+export const DAY_PASS = {
+  key: 'daypass',
+  name: 'Day Pass',
+  price: 9,
+  faxBlock: 5,
+  recipientLimit: Infinity,
+  duration: '8 hours',
+  features: [
+    '5 documents per pass',
+    '8-hour access window',
+    'AI-powered routing',
+    'Send + receive faxes',
+    'Full dashboard access',
+    'Auto-expand available',
+  ],
+} as const;
+
+// Keep backward compatibility
+export const PLANS = {
+  standard: PLAN,
+  daypass: DAY_PASS,
+} as const;
+
+export const STRIPE_PRICE_MAP: Record<string, string> = {
+  standard: 'STRIPE_PRICE_STANDARD_MONTHLY',
+  daypass: 'STRIPE_PRICE_DAYPASS',
 };
 
 export const FEATURES = [
@@ -167,8 +148,8 @@ export const DASHBOARD_NAV_ITEMS = [
 ] as const;
 
 export const DASHBOARD_STATS = [
-  { label: 'Faxes This Month', value: '47', limit: '100', icon: 'FileText' as const },
-  { label: 'Recipients', value: '4', limit: '5', icon: 'Users' as const },
+  { label: 'Faxes This Month', value: '47', limit: '500', icon: 'FileText' as const },
+  { label: 'Recipients', value: '4', icon: 'Users' as const },
   { label: 'Routing Accuracy', value: '94%', icon: 'Target' as const },
   { label: 'Avg. Processing', value: '3.2s', icon: 'Clock' as const },
 ] as const;
@@ -490,11 +471,11 @@ export const MOCK_DASHBOARD_DATA = {
     _id: 'demo_customer_001',
     email: 'demo@faxbella.com',
     name: 'Riverside Family Medicine',
-    plan: 'business',
+    plan: 'standard',
     planStatus: 'active',
     faxesThisMonth: 47,
     faxesLimit: 500,
-    recipientLimit: 25,
+    recipientLimit: 999999,
     faxNumber: '+15551234567',
     humbleFaxAccessKey: '***configured***',
     humbleFaxSecretKey: '***configured***',

@@ -21,7 +21,7 @@ export type PageStatus = 'idle' | 'submitting' | 'success' | 'error';
    Constants
    ---------------------------------------- */
 
-export const SEND_ELIGIBLE_PLANS = ['business', 'enterprise'] as const;
+export const SEND_ELIGIBLE_PLANS = ['standard', 'daypass', 'business', 'enterprise'] as const;
 
 export const PHONE_PLACEHOLDER = '+1 (555) 123-4567';
 export const PHONE_HINT = 'US format: 10 digits or +1 followed by 10 digits';

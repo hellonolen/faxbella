@@ -23,12 +23,15 @@ import Stripe from 'stripe';
 // ─── Constants ───────────────────────────────────────────
 
 const PLAN_LIMITS: Record<string, { faxes: number; recipients: number }> = {
-    starter: { faxes: 100, recipients: 5 },
-    business: { faxes: 500, recipients: 25 },
-    enterprise: { faxes: 999999, recipients: 999999 },
+    standard: { faxes: 500, recipients: 999999 },
+    daypass: { faxes: 5, recipients: 999999 },
+    // Legacy support
+    starter: { faxes: 500, recipients: 999999 },
+    business: { faxes: 500, recipients: 999999 },
+    enterprise: { faxes: 500, recipients: 999999 },
 };
 
-const VALID_PLANS = ['starter', 'business', 'enterprise'];
+const VALID_PLANS = ['standard', 'daypass', 'starter', 'business', 'enterprise'];
 const VALID_BILLING_CYCLES = ['monthly', 'annual'];
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -200,7 +203,7 @@ export const handleCheckoutCompleted = internalMutation({
         stripeSubscriptionId: v.string(),
     },
     handler: async (ctx, args) => {
-        const limits = PLAN_LIMITS[args.plan] || PLAN_LIMITS.starter;
+        const limits = PLAN_LIMITS[args.plan] || PLAN_LIMITS.standard;
 
         // Check if customer already exists
         const existing = await ctx.db
@@ -260,7 +263,7 @@ export const handleSubscriptionUpdated = internalMutation({
             return { success: false };
         }
 
-        const limits = PLAN_LIMITS[args.plan] || PLAN_LIMITS[customer.plan] || PLAN_LIMITS.starter;
+        const limits = PLAN_LIMITS[args.plan] || PLAN_LIMITS[customer.plan] || PLAN_LIMITS.standard;
 
         // Map Stripe status to FaxBella status
         const statusMap: Record<string, string> = {

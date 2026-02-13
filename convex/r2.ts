@@ -98,10 +98,11 @@ export const getPresignedUploadUrl = action({
             throw new Error('Customer not found');
         }
 
-        // Plan-based size limits: 20MB Business, 50MB Enterprise
-        const maxSize = customer.plan === 'enterprise' ? 50 * 1024 * 1024 : 20 * 1024 * 1024;
+        // All plans get 50MB file size limit
+        const maxSizeMB = 50;
+        const maxSize = maxSizeMB * 1024 * 1024;
         if (args.fileSize > maxSize) {
-            throw new Error(`File size exceeds ${maxSize / (1024 * 1024)}MB limit for your plan`);
+            throw new Error(`File size exceeds ${maxSizeMB}MB limit`);
         }
 
         const objectKey = buildObjectKey(String(customer._id), args.direction, args.fileName);

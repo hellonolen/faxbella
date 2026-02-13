@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FaxBella Strategy &amp; Architecture Plan</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fafafa;
+            color: #1a1a2e;
+            line-height: 1.7;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            padding: 60px 40px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 2.4em;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+        }
+        .header .accent {
+            color: #e8553d;
+        }
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.7;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .header .date {
+            margin-top: 20px;
+            font-size: 0.85em;
+            opacity: 0.5;
+            font-family: monospace;
+        }
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid #eee;
+        }
+        .section-number {
+            display: inline-block;
+            background: #e8553d;
+            color: white;
+            font-family: monospace;
+            font-size: 0.75em;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+        h2 {
+            font-size: 1.6em;
+            font-weight: 800;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            letter-spacing: -0.01em;
+        }
+        h3 {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-top: 28px;
+            margin-bottom: 12px;
+        }
+        p {
+            margin-bottom: 16px;
+            color: #444;
+        }
+        .highlight {
+            background: #fff8f6;
+            border-left: 4px solid #e8553d;
+            padding: 20px 24px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+        }
+        .highlight p {
+            margin-bottom: 0;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.92em;
+        }
+        thead th {
+            background: #1a1a2e;
+            color: white;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        thead th:first-child { border-radius: 8px 0 0 0; }
+        thead th:last-child { border-radius: 0 8px 0 0; }
+        tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #444;
+        }
+        tbody tr:hover { background: #fafafa; }
+        tbody tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+        tbody tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+        .tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .tag-green { background: #e6f9e6; color: #1a7a1a; }
+        .tag-red { background: #fde8e8; color: #c53030; }
+        .tag-blue { background: #e8f0fe; color: #1a56db; }
+        .tag-orange { background: #fff3e0; color: #c05621; }
+        .flowchart {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 32px;
+            margin: 24px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.8;
+            white-space: pre;
+            overflow-x: auto;
+            color: #1a1a2e;
+        }
+        .money {
+            font-family: monospace;
+            font-weight: 700;
+            color: #1a7a1a;
+        }
+        .cost {
+            font-family: monospace;
+            font-weight: 700;
+            color: #c53030;
+        }
+        .divider {
+            height: 1px;
+            background: #eee;
+            margin: 32px 0;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .col-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 24px;
+            border: 1px solid #eee;
+        }
+        .col-card h4 {
+            font-size: 1em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1a1a2e;
+        }
+        .col-card p {
+            font-size: 0.9em;
+            margin-bottom: 0;
+        }
+        .phase-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .phase-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            border: 2px solid #eee;
+            text-align: center;
+        }
+        .phase-card.active {
+            border-color: #e8553d;
+            background: #fff8f6;
+        }
+        .phase-card h4 {
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        .phase-card h3 {
+            margin-top: 0;
+            font-size: 1.1em;
+        }
+        .phase-card p {
+            font-size: 0.85em;
+        }
+        .phase-card .revenue {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #1a7a1a;
+        }
+        @media (max-width: 700px) {
+            .two-col, .phase-grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1.8em; }
+            .section { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1>FaxBella<span class="accent">.</span></h1>
+            <p>AI-First Document Routing Platform &mdash; Strategy, Architecture &amp; Business Plan</p>
+            <div class="date">Prepared February 13, 2026 &bull; Doclish Inc.</div>
+        </div>
+
+        <!-- SECTION 1: VISION -->
+        <div class="section">
+            <span class="section-number">Section 1</span>
+            <h2>The Vision</h2>
+            <p>FaxBella is not a fax app with AI bolted on. FaxBella is an <strong>AI-powered document routing platform</strong> that happens to support fax as one delivery channel among many.</p>
+
+            <div class="highlight">
+                <p>Gemini is the brain. Everything else is plumbing. Documents come in any way. AI reads, understands, classifies, and routes them. Delivery happens through whatever channel the recipient needs &mdash; fax, email, secure link, webhook, or API.</p>
+            </div>
+
+            <h3>Who Uses FaxBella</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>What They Do</th>
+                        <th>How They Access It</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Regular person</strong></td>
+                        <td>Opens the app, uploads a document, sends a fax</td>
+                        <td>Day Pass ($9) or Dashboard at faxbella.com</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Title company</strong></td>
+                        <td>Sends closing packages to attorneys and lenders</td>
+                        <td>Dashboard + bulk upload</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pharmacy / clinic</strong></td>
+                        <td>Receives prescriptions and referrals, AI routes to correct department</td>
+                        <td>Dashboard + email intake</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Insurance company</strong></td>
+                        <td>Processes claims documents from multiple sources</td>
+                        <td>API + upload portal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Car dealership</strong></td>
+                        <td>Receives finance docs, titles, trade paperwork</td>
+                        <td>Dashboard + email intake</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Developer</strong></td>
+                        <td>Integrates document routing into their own app</td>
+                        <td>MCP server + REST API</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AI agent</strong></td>
+                        <td>Automated workflows that send and route documents</td>
+                        <td>MCP tool calls</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>Same platform. Same AI engine. <strong>Four doors in:</strong> Dashboard for regular people. Upload portal for senders. MCP for developers. API for automation.</p>
+        </div>
+
+        <!-- SECTION 2: ARCHITECTURE -->
+        <div class="section">
+            <span class="section-number">Section 2</span>
+            <h2>System Architecture</h2>
+            <p>Every document, regardless of how it arrives, flows through the same AI pipeline.</p>
+
+            <div class="flowchart">
+INTAKE (How documents arrive)
+=============================
+
+  Your mama        Title company      Pharmacy         Developer        AI Agent
+      |                |                |                |                |
+  [Upload]        [Bulk upload]    [Email forward]   [MCP call]      [API POST]
+      |                |                |                |                |
+      +--------+-------+-------+--------+-------+-------+
+               |                        |
+               v                        v
+     +---------+----------+   +---------+---------+
+     |  Upload Portal     |   |  Email Intake     |
+     |  faxbella.com      |   |  @intake.faxbella |
+     +--------------------+   +-------------------+
+               |                        |
+               +----------+-------------+
+                          |
+                          v
+            +-------------+-------------+
+            |                           |
+            |     FAXBELLA CORE         |
+            |     (Convex Backend)      |
+            |                           |
+            |  +---------------------+  |
+            |  |   GEMINI 2.0 FLASH  |  |
+            |  |                     |  |
+            |  |  - Reads document   |  |
+            |  |  - OCR extraction   |  |
+            |  |  - Classification   |  |
+            |  |  - Urgency detect   |  |
+            |  |  - Routing decision |  |
+            |  |  - Data extraction  |  |
+            |  +---------------------+  |
+            |                           |
+            |  +---------------------+  |
+            |  |   AI CONCIERGE      |  |
+            |  |   Chat + Voice      |  |
+            |  +---------------------+  |
+            |                           |
+            |  +---------------------+  |
+            |  |   MCP SERVER        |  |
+            |  |   Developer access  |  |
+            |  +---------------------+  |
+            |                           |
+            |  +---------------------+  |
+            |  |   R2 STORAGE        |  |
+            |  |   Document archive  |  |
+            |  +---------------------+  |
+            |                           |
+            +-------------+-------------+
+                          |
+                          v
+            DELIVERY (How documents go out)
+            ================================
+
+            Gemini decides the best channel:
+
+            +----------+----------+----------+----------+
+            |          |          |          |          |
+            v          v          v          v          v
+         [Fax]     [Email]   [Secure]  [Webhook]  [API]
+            |          |      [Link]       |          |
+            v          v          |        v          v
+       FreeSWITCH   EmailIt       |    Customer    Developer
+       (Our VPS)       |          |    endpoint      app
+            |          v          v
+            v      Recipient   Recipient
+        SIP Trunk   inbox      browser
+        (VoIP.ms)
+            |
+            v
+        Phone network
+            |
+            v
+        Recipient's
+        fax machine</div>
+
+            <h3>What FaxBella Owns vs. What FaxBella Rents</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>We Own (Full Control)</th>
+                        <th>We Rent (Commodity, Swappable)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>FaxBella platform (Convex + Cloudflare)</td>
+                        <td>SIP trunk &mdash; VoIP.ms ($0.85/mo per number)</td>
+                    </tr>
+                    <tr>
+                        <td>FreeSWITCH fax server (our VPS)</td>
+                        <td>VPS hosting &mdash; Hetzner ($4.50/mo)</td>
+                    </tr>
+                    <tr>
+                        <td>AI engine (Gemini)</td>
+                        <td>Email delivery &mdash; EmailIt (per email)</td>
+                    </tr>
+                    <tr>
+                        <td>MCP server</td>
+                        <td>&mdash;</td>
+                    </tr>
+                    <tr>
+                        <td>All branding and customer experience</td>
+                        <td>&mdash;</td>
+                    </tr>
+                    <tr>
+                        <td>Customer data and relationships</td>
+                        <td>&mdash;</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="highlight">
+                <p>Zero third-party branding ever touches our customers. No "Powered by HumbleFax" receipts. No Telnyx logos. When a fax is sent, the recipient sees FaxBella and nothing else.</p>
+            </div>
+        </div>
+
+        <!-- SECTION 3: AI AGENTS -->
+        <div class="section">
+            <span class="section-number">Section 3</span>
+            <h2>AI Agents</h2>
+            <p>FaxBella is a fully agentic environment. Five AI agents handle the complete document lifecycle.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Agent</th>
+                        <th>Role</th>
+                        <th>How It Works</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Intake Agent</strong></td>
+                        <td>Accepts documents from any source</td>
+                        <td>Upload portal, email, API, MCP tool call, drag-and-drop. Gemini instantly reads and understands the document the moment it arrives.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Routing Agent</strong></td>
+                        <td>Decides where it goes</td>
+                        <td>Gemini analyzes content, identifies the recipient, matches to known contacts, learns routing patterns over time. Gets smarter with every document.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Delivery Agent</strong></td>
+                        <td>Sends it however the recipient needs</td>
+                        <td>Fax (via FreeSWITCH), email (via EmailIt), secure download link, API webhook. Recipient preference drives channel selection.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Follow-up Agent</strong></td>
+                        <td>Confirms delivery and handles failures</td>
+                        <td>Tracks delivery confirmations. Retries on failure. Escalates when needed. Notifies the sender of final status.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Concierge Agent</strong></td>
+                        <td>Talks to the user</td>
+                        <td>Chat interface in the dashboard + voice via Gemini. "Send this to Dr. Smith" and the agent handles everything. Proactive: "I noticed 3 urgent referrals &mdash; want me to route them?"</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 4: MCP SERVER -->
+        <div class="section">
+            <span class="section-number">Section 4</span>
+            <h2>MCP Server &mdash; The Developer Revenue Channel</h2>
+
+            <p>The MCP (Model Context Protocol) server exposes FaxBella's capabilities as tools that other AI systems can use. This is not just a technical feature &mdash; <strong>it is a distribution and revenue strategy.</strong></p>
+
+            <div class="highlight">
+                <p>Developers discover FaxBella's MCP server. They connect it to their AI workflows. Every document processed through their integration means FaxBella gets paid. They tell other developers. It shows up in MCP registries. Organic growth without marketing spend.</p>
+            </div>
+
+            <h3>MCP Tools Exposed</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>What It Does</th>
+                        <th>Example Use</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>faxbella.sendDocument</code></td>
+                        <td>Send a document via any channel</td>
+                        <td>AI agent: "Fax this referral to Dr. Smith at (555) 123-4567"</td>
+                    </tr>
+                    <tr>
+                        <td><code>faxbella.routeDocument</code></td>
+                        <td>Let AI decide where a document should go</td>
+                        <td>AI agent: "Here's a PDF &mdash; figure out who needs it"</td>
+                    </tr>
+                    <tr>
+                        <td><code>faxbella.getStatus</code></td>
+                        <td>Check delivery status</td>
+                        <td>AI agent: "Did that fax go through?"</td>
+                    </tr>
+                    <tr>
+                        <td><code>faxbella.listInbox</code></td>
+                        <td>View received documents</td>
+                        <td>AI agent: "Show me unread documents"</td>
+                    </tr>
+                    <tr>
+                        <td><code>faxbella.addRecipient</code></td>
+                        <td>Add a new contact</td>
+                        <td>AI agent: "Add Dr. Johnson, fax (555) 987-6543"</td>
+                    </tr>
+                    <tr>
+                        <td><code>faxbella.classifyDocument</code></td>
+                        <td>AI reads and classifies any document</td>
+                        <td>AI agent: "What kind of document is this?"</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>People put FaxBella in their workflow. They find the MCP server, connect to it, and we get paid. That is the goal.</p>
+        </div>
+
+        <!-- SECTION 5: INFRASTRUCTURE -->
+        <div class="section">
+            <span class="section-number">Section 5</span>
+            <h2>Infrastructure Choices</h2>
+
+            <h3>Fax Transmission: FreeSWITCH (Open Source, Self-Hosted)</h3>
+            <p>FreeSWITCH is the industry-standard open-source telecom engine. It handles the fax protocol &mdash; converting PDFs into fax signals and vice versa. We deploy it on our own server and own it completely.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>What It Is</th>
+                        <th>Why</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>FreeSWITCH</strong></td>
+                        <td>Open-source telecom engine (3,000+ GitHub stars)</td>
+                        <td>Battle-tested, handles T.38 fax protocol, REST API, massive community</td>
+                    </tr>
+                    <tr>
+                        <td><strong>mod_spandsp</strong></td>
+                        <td>FreeSWITCH module for fax</td>
+                        <td>Converts PDF to fax signal and back. The actual engine that makes fax work.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SpanDSP</strong></td>
+                        <td>DSP library for fax/modem signals</td>
+                        <td>Core dependency. Handles the low-level signal processing.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>SIP Trunk Provider: VoIP.ms</h3>
+            <p>A SIP trunk connects our FreeSWITCH server to the phone network. VoIP.ms is a Canadian company with minimal signup requirements and pay-as-you-go pricing.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Detail</th>
+                        <th>VoIP.ms</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Signup</td><td>Email + credit card only</td></tr>
+                    <tr><td>KYC / identity</td><td>Minimal &mdash; no SSN, no government ID, no pay stubs</td></tr>
+                    <tr><td>Phone numbers</td><td>$0.85/month per number</td></tr>
+                    <tr><td>Per-minute cost</td><td>$0.01/minute (approx $0.01-0.03 per fax page)</td></tr>
+                    <tr><td>API</td><td>REST API for number management</td></tr>
+                    <tr><td>Contracts</td><td>None. Pay-as-you-go. Cancel anytime.</td></tr>
+                    <tr><td>Track record</td><td>15+ years in business</td></tr>
+                </tbody>
+            </table>
+            <p>If VoIP.ms ever becomes a problem, swapping to BulkVS or Anveo takes one config change on FreeSWITCH. The SIP trunk is a commodity &mdash; completely replaceable.</p>
+
+            <h3>VPS Hosting: Hetzner</h3>
+            <p>FreeSWITCH runs on a standard Linux VPS. Hetzner offers the best price-to-performance ratio in the industry.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Detail</th>
+                        <th>Hetzner CX22</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Monthly cost</td><td>$4.50/month</td></tr>
+                    <tr><td>Specs</td><td>2 vCPU, 4GB RAM, 40GB SSD</td></tr>
+                    <tr><td>Location</td><td>Ashburn, VA (US East)</td></tr>
+                    <tr><td>Company</td><td>German, 25+ year hosting company</td></tr>
+                    <tr><td>Capacity</td><td>Handles hundreds of concurrent fax sessions</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Full Technology Stack</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Technology</th>
+                        <th>Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Frontend</td><td>Next.js 15 on Cloudflare Workers</td><td>Free tier</td></tr>
+                    <tr><td>Backend</td><td>Convex (serverless, real-time)</td><td>Free tier &rarr; $25/mo at scale</td></tr>
+                    <tr><td>AI Engine</td><td>Google Gemini 2.0 Flash</td><td>Free tier &rarr; usage-based</td></tr>
+                    <tr><td>Fax Engine</td><td>FreeSWITCH + SpanDSP (self-hosted)</td><td>$4.50/mo (Hetzner VPS)</td></tr>
+                    <tr><td>Phone Numbers</td><td>VoIP.ms SIP trunk</td><td>$0.85/mo per number</td></tr>
+                    <tr><td>Email Delivery</td><td>EmailIt</td><td>Per email</td></tr>
+                    <tr><td>File Storage</td><td>Cloudflare R2</td><td>Free tier (10GB) &rarr; $0.015/GB/mo</td></tr>
+                    <tr><td>Auth</td><td>Passkeys (WebAuthn)</td><td>Free (built-in)</td></tr>
+                    <tr><td>Payments</td><td>Stripe + Whop</td><td>Processing fees only</td></tr>
+                    <tr><td>Voice AI</td><td>Google Gemini (text + voice)</td><td>Per minute</td></tr>
+                    <tr><td>Domain / CDN</td><td>Cloudflare</td><td>Free tier</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 6: UNIT ECONOMICS -->
+        <div class="section">
+            <span class="section-number">Section 6</span>
+            <h2>Unit Economics &mdash; You Pay Nothing Out of Pocket</h2>
+            <p>The membership fee covers all costs. Every customer pays for their own usage. Infrastructure costs are shared across all customers.</p>
+
+            <h3>Fixed Monthly Infrastructure</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Monthly Cost</th>
+                        <th>Shared Across</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Hetzner VPS (FreeSWITCH)</td><td class="cost">$4.50</td><td>All customers</td></tr>
+                    <tr><td>VoIP.ms base (5 numbers)</td><td class="cost">$4.25</td><td>All customers</td></tr>
+                    <tr><td>Convex backend</td><td class="cost">$0 (free tier)</td><td>All customers</td></tr>
+                    <tr><td>Cloudflare Workers</td><td class="cost">$0 (free tier)</td><td>All customers</td></tr>
+                    <tr><td>Cloudflare R2 storage</td><td class="cost">$0 (free tier covers ~66 customers)</td><td>All customers</td></tr>
+                    <tr>
+                        <td><strong>Total Fixed Cost</strong></td>
+                        <td><strong class="cost">~$9/month</strong></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Variable Cost Per Fax</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>VoIP.ms per page (avg 3 pages/fax)</td><td>$0.03 per fax</td></tr>
+                    <tr><td>Gemini AI processing</td><td>~$0.001 per document</td></tr>
+                    <tr><td>EmailIt notification</td><td>~$0.001 per email</td></tr>
+                    <tr><td>R2 storage (300KB avg per fax)</td><td>~$0.000005 per fax</td></tr>
+                    <tr>
+                        <td><strong>Total per fax</strong></td>
+                        <td><strong>~$0.03</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Revenue Per Customer</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Monthly Fee</th>
+                        <th>Faxes Used</th>
+                        <th>Fax Cost</th>
+                        <th>Profit</th>
+                        <th>Margin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Day Pass &mdash; 3 docs</strong></td>
+                        <td class="money">$9</td>
+                        <td>3</td>
+                        <td class="cost">$0.09</td>
+                        <td class="money">$8.91</td>
+                        <td><span class="tag tag-green">99%</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Day Pass &mdash; 5 docs</strong></td>
+                        <td class="money">$9</td>
+                        <td>5</td>
+                        <td class="cost">$0.15</td>
+                        <td class="money">$8.85</td>
+                        <td><span class="tag tag-green">98%</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Light user (50 faxes)</strong></td>
+                        <td class="money">$55</td>
+                        <td>50</td>
+                        <td class="cost">$1.50</td>
+                        <td class="money">$53.50</td>
+                        <td><span class="tag tag-green">97%</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard user (250 faxes)</strong></td>
+                        <td class="money">$55</td>
+                        <td>250</td>
+                        <td class="cost">$7.50</td>
+                        <td class="money">$47.50</td>
+                        <td><span class="tag tag-green">86%</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Full block (500 faxes)</strong></td>
+                        <td class="money">$55</td>
+                        <td>500</td>
+                        <td class="cost">$15.00</td>
+                        <td class="money">$40.00</td>
+                        <td><span class="tag tag-green">73%</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Heavy user (1,000 faxes)</strong></td>
+                        <td class="money">$110</td>
+                        <td>1,000</td>
+                        <td class="cost">$30.00</td>
+                        <td class="money">$80.00</td>
+                        <td><span class="tag tag-green">73%</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="highlight">
+                <p>Day Pass customers are almost pure profit at 98-99% margins. Membership customers cover infrastructure with customer #1. The two-tier model captures everyone &mdash; from mama sending one fax to the pharmacy processing 500 a month.</p>
+            </div>
+        </div>
+
+        <!-- SECTION 7: THREE-PHASE EVOLUTION -->
+        <div class="section">
+            <span class="section-number">Section 7</span>
+            <h2>The Three-Phase Evolution</h2>
+            <p>FaxBella follows the same trajectory as EmailIt: product first, platform second, infrastructure third.</p>
+
+            <div class="phase-grid">
+                <div class="phase-card active">
+                    <h4>Phase 1 &mdash; Now</h4>
+                    <h3>SaaS Product</h3>
+                    <p>Dashboard, upload portal, send/receive, AI routing. Day Pass ($9/day) for one-time users. Membership ($55/mo) for businesses. Your mama can use it.</p>
+                    <div class="revenue">Revenue: Memberships</div>
+                </div>
+                <div class="phase-card">
+                    <h4>Phase 2 &mdash; 6 Months</h4>
+                    <h3>Developer Platform</h3>
+                    <p>MCP server, REST API, npm SDK, webhooks. Developers plug FaxBella into their own apps and AI workflows.</p>
+                    <div class="revenue">Revenue: Memberships + API usage fees</div>
+                </div>
+                <div class="phase-card">
+                    <h4>Phase 3 &mdash; 12-18 Months</h4>
+                    <h3>Infrastructure Backbone</h3>
+                    <p>Other companies build ON TOP of FaxBella. White-label option. Enterprise SLAs. Volume pricing. "The EmailIt of document routing."</p>
+                    <div class="revenue">Revenue: Memberships + API + volume + white-label licensing</div>
+                </div>
+            </div>
+
+            <h3>Companies That Made This Exact Journey</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Started As</th>
+                        <th>Became</th>
+                        <th>Revenue Model</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>EmailIt</strong></td>
+                        <td>Email delivery tool</td>
+                        <td>Email infrastructure backbone</td>
+                        <td>Pay per email</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stripe</strong></td>
+                        <td>Simple payment form</td>
+                        <td>Financial infrastructure</td>
+                        <td>% per transaction</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Twilio</strong></td>
+                        <td>SMS API</td>
+                        <td>Communications infrastructure</td>
+                        <td>Pay per message/call</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cloudflare</strong></td>
+                        <td>CDN / security</td>
+                        <td>Internet infrastructure</td>
+                        <td>Usage tiers</td>
+                    </tr>
+                    <tr>
+                        <td><strong>FaxBella</strong></td>
+                        <td>AI fax routing app</td>
+                        <td>Document routing infrastructure</td>
+                        <td>Memberships + per document + white-label</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 8: INTAKE CHANNELS -->
+        <div class="section">
+            <span class="section-number">Section 8</span>
+            <h2>Multi-Channel Document Intake</h2>
+            <p>Documents arrive from five different channels. All of them feed into the same Gemini AI pipeline.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Channel</th>
+                        <th>How It Works</th>
+                        <th>Who Uses It</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Upload Portal</strong></td>
+                        <td>Public page per customer. Drag-and-drop any document. Gemini reads it instantly.</td>
+                        <td>Anyone &mdash; regular users, offices, walk-ins</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email Intake</strong></td>
+                        <td>Cloudflare Email Workers receive documents at customer@intake.faxbella.com. Attachments extracted automatically.</td>
+                        <td>Offices forwarding from existing fax-to-email, printers doing scan-to-email</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fax Receive</strong></td>
+                        <td>FreeSWITCH receives fax calls on dedicated numbers. Converts to PDF. Feeds into AI.</td>
+                        <td>Anyone sending a traditional fax</td>
+                    </tr>
+                    <tr>
+                        <td><strong>REST API</strong></td>
+                        <td>POST a document with metadata. Returns classification, routing, and delivery status.</td>
+                        <td>Developers integrating FaxBella into their own systems</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MCP Server</strong></td>
+                        <td>AI agents call faxbella.sendDocument() or faxbella.routeDocument() as tool calls.</td>
+                        <td>AI workflows, automated systems, developer agents</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 9: DELIVERY CHANNELS -->
+        <div class="section">
+            <span class="section-number">Section 9</span>
+            <h2>Multi-Channel Delivery</h2>
+            <p>Gemini's Routing Agent picks the best delivery channel based on the recipient's preferences and the document type.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Channel</th>
+                        <th>How It Works</th>
+                        <th>When It's Used</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Fax</strong></td>
+                        <td>FreeSWITCH converts PDF to fax signal, sends via SIP trunk to recipient's fax machine</td>
+                        <td>Recipient only has a fax number (pharmacies, courts, older offices)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email</strong></td>
+                        <td>EmailIt delivers the document as a PDF attachment with AI-generated summary</td>
+                        <td>Recipient prefers email (most modern offices)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Secure Link</strong></td>
+                        <td>Document stored in R2, time-limited presigned URL sent to recipient</td>
+                        <td>Large files, HIPAA-sensitive documents, one-time access needed</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Webhook</strong></td>
+                        <td>POST to customer's configured endpoint with document data and metadata</td>
+                        <td>Automated systems, EHR integrations, custom workflows</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API Response</strong></td>
+                        <td>Return document data directly in the API/MCP response</td>
+                        <td>Developer integrations, AI agent workflows</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 10: BUILD PRIORITY -->
+        <div class="section">
+            <span class="section-number">Section 10</span>
+            <h2>Build Priority</h2>
+            <p>What gets built and in what order.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Priority</th>
+                        <th>What</th>
+                        <th>Why</th>
+                        <th>Depends On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="tag tag-red">P1</span></td>
+                        <td><strong>Upload portal + email intake + AI routing</strong></td>
+                        <td>Core product. Regular people can use it immediately.</td>
+                        <td>Nothing &mdash; builds on existing Gemini engine</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag tag-red">P1</span></td>
+                        <td><strong>FreeSWITCH on Hetzner + VoIP.ms</strong></td>
+                        <td>Own the fax pipe. White-label. No third-party branding.</td>
+                        <td>Hetzner account + VoIP.ms account</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag tag-orange">P2</span></td>
+                        <td><strong>MCP server</strong></td>
+                        <td>Developer distribution channel. Revenue growth.</td>
+                        <td>Core routing must work first</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag tag-orange">P2</span></td>
+                        <td><strong>AI Concierge (Gemini chat in dashboard)</strong></td>
+                        <td>"Send this to Dr. Smith" &mdash; conversational interface</td>
+                        <td>Core routing must work first</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag tag-blue">P3</span></td>
+                        <td><strong>Voice agent (Gemini)</strong></td>
+                        <td>Call FaxBella, tell it what to do by voice</td>
+                        <td>Concierge agent must work first</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag tag-blue">P3</span></td>
+                        <td><strong>REST API + SDK</strong></td>
+                        <td>Full developer platform beyond MCP</td>
+                        <td>MCP server must work first</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 11: TARGET MARKETS -->
+        <div class="section">
+            <span class="section-number">Section 11</span>
+            <h2>Target Markets</h2>
+            <p>Industries that still rely heavily on fax and document routing. These are the customers who need FaxBella today.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Industry</th>
+                        <th>Why They Still Fax</th>
+                        <th>FaxBella Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Healthcare / Pharmacies</strong></td>
+                        <td>HIPAA compliance, prescriptions, referrals, lab results</td>
+                        <td>AI reads prescriptions, routes to correct pharmacist/doctor, flags urgent items</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Insurance</strong></td>
+                        <td>Claims documents, policy transfers, proof of coverage</td>
+                        <td>AI classifies claim types, routes to correct adjuster, extracts data</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Car Dealerships</strong></td>
+                        <td>Finance docs, titles, trade paperwork, lender communications</td>
+                        <td>AI routes finance docs to correct department, flags missing signatures</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Legal / Title Companies</strong></td>
+                        <td>Closing packages, court filings, notarized documents</td>
+                        <td>AI identifies document types, routes to correct attorney/agent, tracks delivery</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Government</strong></td>
+                        <td>Permits, licenses, regulatory filings</td>
+                        <td>AI classifies submissions, routes to correct department, acknowledges receipt</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Real Estate</strong></td>
+                        <td>Contracts, disclosures, inspection reports</td>
+                        <td>AI identifies document stage, routes to buyer/seller agent, flags deadlines</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 12: COMPETITIVE POSITION -->
+        <div class="section">
+            <span class="section-number">Section 12</span>
+            <h2>Why FaxBella Wins</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Competitor</th>
+                        <th>What They Do</th>
+                        <th>What They Don't Do</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>eFax / MyFax</td>
+                        <td>Send and receive faxes online</td>
+                        <td>No AI. No routing. No classification. Dumb pipe.</td>
+                    </tr>
+                    <tr>
+                        <td>RingCentral Fax</td>
+                        <td>Cloud fax as part of UCaaS</td>
+                        <td>No AI routing. Expensive. Locked into their ecosystem.</td>
+                    </tr>
+                    <tr>
+                        <td>Documo / mFax</td>
+                        <td>Fax API for developers</td>
+                        <td>No AI. API only, no end-user product. No MCP.</td>
+                    </tr>
+                    <tr>
+                        <td>Consensus Cloud (j2 Global)</td>
+                        <td>Enterprise cloud fax</td>
+                        <td>Legacy tech. No AI. Expensive. No developer platform.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="highlight">
+                <p>Nobody else combines AI document understanding + multi-channel intake + multi-channel delivery + MCP developer platform + self-hosted fax infrastructure. FaxBella is the only AI-first solution in a market full of dumb pipes.</p>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="section" style="text-align: center; background: #1a1a2e; color: white;">
+            <p style="color: rgba(255,255,255,0.5); font-size: 0.85em; margin-bottom: 8px;">CONFIDENTIAL &mdash; DOCLISH INC.</p>
+            <h2 style="color: white;">FaxBella<span style="color: #e8553d;">.</span></h2>
+            <p style="color: rgba(255,255,255,0.6);">AI-First Document Routing Platform</p>
+            <p style="color: rgba(255,255,255,0.4); font-size: 0.8em; margin-top: 20px;">faxbella.com &bull; Doclish Inc. &bull; February 2026</p>
+        </div>
+
+    </div>
+</body>
+</html>

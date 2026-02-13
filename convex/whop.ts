@@ -25,15 +25,21 @@ import { internal } from './_generated/api';
 // Whop plan IDs must be configured in the Whop Dashboard
 // Map FaxBella plan names to Whop plan/product IDs
 const WHOP_PLAN_IDS: Record<string, string> = {
-    starter: 'plan_faxbella_starter',
-    business: 'plan_faxbella_business',
-    enterprise: 'plan_faxbella_enterprise',
+    standard: 'plan_faxbella_standard',
+    daypass: 'plan_faxbella_daypass',
+    // Legacy support
+    starter: 'plan_faxbella_standard',
+    business: 'plan_faxbella_standard',
+    enterprise: 'plan_faxbella_standard',
 };
 
 const PLAN_PRICES: Record<string, number> = {
-    starter: 2900,     // $29.00 in cents
-    business: 9900,    // $99.00
-    enterprise: 29900, // $299.00
+    standard: 5500,    // $55.00 per 500-fax block
+    daypass: 900,      // $9.00 per 5-doc day pass
+    // Legacy support
+    starter: 5500,
+    business: 5500,
+    enterprise: 5500,
 };
 
 // ─── Admin: Payment Processor Toggle ───────────────────────
@@ -108,7 +114,7 @@ export const setActiveProcessor = mutation({
 export const createCheckoutSession = action({
     args: {
         email: v.string(),
-        plan: v.string(), // 'starter' | 'business' | 'enterprise'
+        plan: v.string(), // 'standard' (legacy: 'starter' | 'business' | 'enterprise')
     },
     handler: async (ctx, args) => {
         const whopApiKey = process.env.WHOP_API_KEY;
@@ -178,12 +184,15 @@ export const handleWhopSubscriptionCreated = internalMutation({
             .first();
 
         const planLimits: Record<string, { faxes: number }> = {
-            starter: { faxes: 100 },
+            standard: { faxes: 500 },
+            daypass: { faxes: 5 },
+            // Legacy support
+            starter: { faxes: 500 },
             business: { faxes: 500 },
-            enterprise: { faxes: 999999 },
+            enterprise: { faxes: 500 },
         };
 
-        const limits = planLimits[args.plan] || planLimits.starter;
+        const limits = planLimits[args.plan] || planLimits.standard;
 
         if (existing) {
             // Update existing customer with Whop info

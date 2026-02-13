@@ -15,11 +15,14 @@ function generateWebhookSecret(): string {
     return secret;
 }
 
-// Plan limits
+// Plan limits — single-tier pricing: $55/mo per 500-fax block, unlimited recipients
 const PLAN_LIMITS: Record<string, { faxes: number; recipients: number }> = {
-    starter: { faxes: 100, recipients: 5 },
-    business: { faxes: 500, recipients: 25 },
-    enterprise: { faxes: 999999, recipients: 999999 },
+    standard: { faxes: 500, recipients: 999999 },
+    daypass: { faxes: 5, recipients: 999999 },
+    // Legacy support
+    starter: { faxes: 500, recipients: 999999 },
+    business: { faxes: 500, recipients: 999999 },
+    enterprise: { faxes: 500, recipients: 999999 },
 };
 
 // Create customer after Stripe checkout
@@ -33,7 +36,7 @@ export const createCustomer = internalMutation({
     },
     handler: async (ctx, args) => {
         const webhookSecret = generateWebhookSecret();
-        const limits = PLAN_LIMITS[args.plan] || PLAN_LIMITS.starter;
+        const limits = PLAN_LIMITS[args.plan] || PLAN_LIMITS.standard;
 
         const customerId = await ctx.db.insert('customers', {
             email: args.email,
@@ -80,10 +83,12 @@ export const getDashboard = query({
             .order('desc')
             .take(10);
 
-        // Plan limits for recipient count
+        // Plan limits for recipient count — all plans get unlimited
         const planRecipientLimits: Record<string, number> = {
-            starter: 5,
-            business: 25,
+            standard: 999999,
+            daypass: 999999,
+            starter: 999999,
+            business: 999999,
             enterprise: 999999,
         };
 
@@ -96,7 +101,7 @@ export const getDashboard = query({
                 planStatus: customer.planStatus,
                 faxesThisMonth: customer.faxesThisMonth,
                 faxesLimit: customer.faxesLimit,
-                recipientLimit: planRecipientLimits[customer.plan] || 5,
+                recipientLimit: planRecipientLimits[customer.plan] || 999999,
                 faxNumber: customer.faxNumber,
                 humbleFaxAccessKey: customer.humbleFaxAccessKey ? '***configured***' : undefined,
                 humbleFaxSecretKey: customer.humbleFaxSecretKey ? '***configured***' : undefined,

@@ -167,7 +167,7 @@ http.route({
                 case 'checkout.session.completed': {
                     const session = event.data.object as Stripe.Checkout.Session;
                     const email = session.customer_email || session.customer_details?.email;
-                    const plan = session.metadata?.faxbella_plan || 'starter';
+                    const plan = session.metadata?.faxbella_plan || 'standard';
                     const stripeCustomerId = typeof session.customer === 'string'
                         ? session.customer
                         : session.customer?.id || '';
@@ -212,7 +212,7 @@ http.route({
 
                     // If we still cannot determine plan, default to current
                     if (!plan) {
-                        plan = 'starter';
+                        plan = 'standard';
                     }
 
                     const result = await ctx.runMutation(internal.stripe.handleSubscriptionUpdated, {
