@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+/* ============================================
+   FaxBella Design System — Variation C (Lyniq-Inspired)
+   ============================================ */
+
+@theme {
+  /* Primary Palette */
+  --color-vc-primary: #2c2c2c;
+  --color-vc-primary-light: #444444;
+  --color-vc-accent: #e8553d;
+  --color-vc-accent-light: #f06b55;
+  --color-vc-accent-glow: rgba(232, 85, 61, 0.35);
+
+  /* Backgrounds */
+  --color-vc-bg: #faf8f5;
+  --color-vc-surface: #f2efeb;
+  --color-vc-surface-dark: #1a1a1a;
+
+  /* Text */
+  --color-vc-text: #1a1a1a;
+  --color-vc-text-secondary: #5a5a5a;
+  --color-vc-text-tertiary: #999999;
+  --color-vc-text-on-dark: #f0ede8;
+
+  /* Borders */
+  --color-vc-border: #e4e0db;
+
+  /* Semantic Colors */
+  --color-success: #16a34a;
+  --color-success-light: #dcfce7;
+  --color-warning: #d97706;
+  --color-warning-light: #fef3c7;
+  --color-error: #dc2626;
+  --color-error-light: #fee2e2;
+  --color-info: #2563eb;
+  --color-info-light: #dbeafe;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-sm: 0 1px 3px rgba(28, 25, 23, 0.06);
+  --shadow-md: 0 4px 12px rgba(28, 25, 23, 0.08);
+  --shadow-lg: 0 12px 40px rgba(28, 25, 23, 0.1);
+  --shadow-xl: 0 20px 60px rgba(28, 25, 23, 0.14);
+  --shadow-glass: 0 8px 32px rgba(28, 25, 23, 0.06);
+  --shadow-glow-accent: 0 8px 40px var(--color-vc-accent-glow);
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    line-height: 1.6;
+    font-size: 16px;
+    background-color: var(--color-vc-bg);
+    color: var(--color-vc-text);
+  }
+}
+
+/* ============================================
+   Component Classes
+   ============================================ */
+
+@layer components {
+  /* Accent line — signature VC element */
+  .accent-line {
+    display: block;
+    width: 48px;
+    height: 3px;
+    background: var(--color-vc-accent);
+    border-radius: 2px;
+  }
+
+  /* Circular CTA button */
+  .circular-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 9999px;
+    background: var(--color-vc-accent);
+    color: white;
+    box-shadow: var(--shadow-glow-accent);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .circular-cta:hover {
+    transform: scale(1.08);
+    box-shadow: 0 12px 50px var(--color-vc-accent-glow);
+  }
+
+  /* Monospace label — used throughout VC design */
+  .mono-label {
+    font-family: var(--font-jetbrains), ui-monospace, monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-vc-text-tertiary);
+  }
+
+  /* Dashboard card */
+  .dash-card {
+    background: white;
+    border: 1px solid var(--color-vc-border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+  }
+
+  .dash-card-accent {
+    background: white;
+    border: 1px solid var(--color-vc-border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    border-top: 3px solid var(--color-vc-accent);
+  }
+
+  /* Status badge base */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-jetbrains), ui-monospace, monospace;
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 9999px;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-vc-surface) 25%,
+      var(--color-vc-border) 50%,
+      var(--color-vc-surface) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--radius-md);
+  }
+
+  @keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Focus ring for inputs */
+  .focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-vc-bg), 0 0 0 4px var(--color-vc-accent);
+  }
+}

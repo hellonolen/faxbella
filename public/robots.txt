@@ -1,0 +1,13 @@
+# FaxBella - faxbella.com
+# AI-Powered Fax Routing Platform
+
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /api/
+Disallow: /login
+Disallow: /signup
+
+# Sitemap
+Sitemap: https://faxbella.com/sitemap.xml
