@@ -180,11 +180,14 @@ http.route({
                         break;
                     }
 
+                    const quantity = parseInt(session.metadata?.faxbella_quantity || '1', 10);
+
                     await ctx.runMutation(internal.stripe.handleCheckoutCompleted, {
                         email,
                         plan,
                         stripeCustomerId,
                         stripeSubscriptionId,
+                        quantity,
                     });
 
                     // Schedule confirmation email

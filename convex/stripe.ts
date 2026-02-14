@@ -90,6 +90,7 @@ export const createCheckoutSession = action({
         email: v.string(),
         plan: v.string(),
         billingCycle: v.string(),
+        quantity: v.optional(v.number()),
         successUrl: v.string(),
         cancelUrl: v.string(),
     },
@@ -100,6 +101,9 @@ export const createCheckoutSession = action({
         if (!VALID_BILLING_CYCLES.includes(args.billingCycle)) {
             throw new Error(`Invalid billing cycle: ${args.billingCycle}. Must be monthly or annual`);
         }
+
+        // Clamp quantity to 1-5 range
+        const qty = Math.min(Math.max(args.quantity || 1, 1), 5);
 
         const stripe = getStripeClient();
         const priceId = getPriceId(args.plan, args.billingCycle);
@@ -115,7 +119,7 @@ export const createCheckoutSession = action({
             line_items: [
                 {
                     price: priceId,
-                    quantity: 1,
+                    quantity: qty,
                 },
             ],
             success_url: args.successUrl,
@@ -123,6 +127,7 @@ export const createCheckoutSession = action({
             metadata: {
                 faxbella_plan: args.plan,
                 faxbella_billing_cycle: args.billingCycle,
+                faxbella_quantity: String(qty),
             },
         };
 
@@ -201,9 +206,12 @@ export const handleCheckoutCompleted = internalMutation({
         plan: v.string(),
         stripeCustomerId: v.string(),
         stripeSubscriptionId: v.string(),
+        quantity: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
-        const limits = PLAN_LIMITS[args.plan] || PLAN_LIMITS.standard;
+        const qty = Math.min(Math.max(args.quantity || 1, 1), 5);
+        const baseLimits = PLAN_LIMITS[args.plan] || PLAN_LIMITS.standard;
+        const limits = { ...baseLimits, faxes: baseLimits.faxes * qty };
 
         // Check if customer already exists
         const existing = await ctx.db

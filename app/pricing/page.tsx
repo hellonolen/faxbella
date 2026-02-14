@@ -258,6 +258,7 @@ function ExpandTable({
 
 export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [membershipQty, setMembershipQty] = useState(1);
 
   return (
     <div className="min-h-screen bg-[var(--color-vc-bg)] text-[var(--color-vc-text)] antialiased">
@@ -412,7 +413,7 @@ export default function PricingPage() {
                 {/* Price */}
                 <div className="mt-4 mb-2">
                   <span className="font-mono text-4xl md:text-5xl font-black text-[var(--color-vc-primary)] tracking-tight">
-                    ${PLAN.price}
+                    ${PLAN.price * membershipQty}
                   </span>
                   <span className="font-mono text-sm text-[var(--color-vc-text-tertiary)] ml-1">
                     /mo
@@ -420,10 +421,35 @@ export default function PricingPage() {
                 </div>
 
                 {/* Billing note */}
-                <div className="mb-8">
+                <div className="mb-4">
                   <p className="font-mono text-xs text-[var(--color-vc-text-tertiary)]">
-                    {PLAN.faxBlock} faxes included &middot; Cancel anytime
+                    {(PLAN.faxBlock * membershipQty).toLocaleString()} faxes included &middot; Cancel anytime
                   </p>
+                </div>
+
+                {/* Quantity selector */}
+                <div className="mb-8">
+                  <label
+                    htmlFor="membership-qty"
+                    className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--color-vc-text-tertiary)] font-bold block mb-2"
+                  >
+                    Fax blocks
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="membership-qty"
+                      value={membershipQty}
+                      onChange={(e) => setMembershipQty(Number(e.target.value))}
+                      className="w-full appearance-none bg-[var(--color-vc-bg)] border border-[var(--color-vc-border)] rounded-lg px-4 py-2.5 pr-10 text-sm font-medium text-[var(--color-vc-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-vc-accent)] cursor-pointer"
+                    >
+                      {[1, 2, 3, 4, 5].map((qty) => (
+                        <option key={qty} value={qty}>
+                          {qty} block{qty > 1 ? 's' : ''} — {(qty * 1000).toLocaleString()} faxes — ${qty * PLAN.price}/mo
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-vc-text-tertiary)] pointer-events-none" />
+                  </div>
                 </div>
 
                 {/* Features */}
@@ -442,7 +468,7 @@ export default function PricingPage() {
 
                 {/* CTA — filled */}
                 <Link
-                  href={ROUTES.signup}
+                  href={`${ROUTES.signup}?plan=standard&quantity=${membershipQty}`}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[var(--color-vc-accent)] text-white font-medium text-sm rounded-full shadow-[var(--shadow-glow-accent)] hover:scale-[1.03] transition-all duration-200"
                 >
                   Get Started

@@ -34,6 +34,8 @@ function SignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get('plan');
+  const rawQty = searchParams.get('quantity');
+  const quantity = rawQty ? Math.min(Math.max(parseInt(rawQty, 10) || 1, 1), 5) : 1;
 
   const {
     register,
@@ -72,6 +74,7 @@ function SignupContent() {
               email,
               plan,
               billingCycle: 'monthly',
+              quantity,
               successUrl: `${window.location.origin}/dashboard?payment=success`,
               cancelUrl: `${window.location.origin}/dashboard`,
             });

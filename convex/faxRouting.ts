@@ -415,6 +415,39 @@ Respond in this EXACT JSON format:
                     console.error('[FAX ROUTING] Notification failed (non-fatal):', notifError);
                 }
 
+                // Step 9: Archive to document library
+                try {
+                    await ctx.runMutation(internal.documentLibrary.archiveDocument, {
+                        customerId: args.customerId,
+                        sourceType: 'inbound',
+                        sourceFaxId: String(args.inboundFaxId),
+                        title: analysis.documentType
+                            ? `${analysis.documentType.replace(/_/g, ' ')} from ${args.fromNumber}`
+                            : `Fax from ${args.fromNumber}`,
+                        documentType: analysis.documentType,
+                        fromNumber: args.fromNumber,
+                        toNumber: customer?.faxNumber,
+                        numPages: undefined,
+                        extractedText: analysis.extractedText?.slice(0, 5000),
+                        r2ObjectKey,
+                        fileName: faxFileName,
+                        fileSize: r2FileSize,
+                        mimeType: 'application/pdf',
+                    });
+                } catch (archiveError) {
+                    console.error('[FAX ROUTING] Document archive failed (non-fatal):', archiveError);
+                }
+
+                // Step 10: Execute matching workflows
+                try {
+                    await ctx.runAction(internal.workflows.executeWorkflows, {
+                        customerId: args.customerId,
+                        inboundFaxId: args.inboundFaxId,
+                    });
+                } catch (wfError) {
+                    console.error('[FAX ROUTING] Workflow execution failed (non-fatal):', wfError);
+                }
+
                 console.log(`[FAX ROUTING] SUCCESS: Routed fax to ${matchedRecipient.email}`);
 
                 return {
@@ -477,6 +510,39 @@ Respond in this EXACT JSON format:
                     }
                 } catch (notifError) {
                     console.error('[FAX ROUTING] Notification for unroutable fax failed (non-fatal):', notifError);
+                }
+
+                // Archive unroutable fax to document library too
+                try {
+                    await ctx.runMutation(internal.documentLibrary.archiveDocument, {
+                        customerId: args.customerId,
+                        sourceType: 'inbound',
+                        sourceFaxId: String(args.inboundFaxId),
+                        title: analysis.documentType
+                            ? `${analysis.documentType.replace(/_/g, ' ')} from ${args.fromNumber}`
+                            : `Fax from ${args.fromNumber}`,
+                        documentType: analysis.documentType,
+                        fromNumber: args.fromNumber,
+                        toNumber: undefined,
+                        numPages: undefined,
+                        extractedText: analysis.extractedText?.slice(0, 5000),
+                        r2ObjectKey,
+                        fileName: faxFileName,
+                        fileSize: r2FileSize,
+                        mimeType: 'application/pdf',
+                    });
+                } catch (archiveError) {
+                    console.error('[FAX ROUTING] Document archive for unroutable failed (non-fatal):', archiveError);
+                }
+
+                // Execute workflows even for unroutable faxes (workflow might handle routing)
+                try {
+                    await ctx.runAction(internal.workflows.executeWorkflows, {
+                        customerId: args.customerId,
+                        inboundFaxId: args.inboundFaxId,
+                    });
+                } catch (wfError) {
+                    console.error('[FAX ROUTING] Workflow execution failed (non-fatal):', wfError);
                 }
 
                 console.log(`[FAX ROUTING] UNROUTABLE: ${analysis.reason}`);

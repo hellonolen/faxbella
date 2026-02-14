@@ -438,6 +438,27 @@ export const sendFaxAction = action({
                 console.error('[OUTBOUND FAX] Confirmation notification failed:', notifyError);
             }
 
+            // Archive to document library
+            try {
+                await ctx.runMutation(internal.documentLibrary.archiveDocument, {
+                    customerId: args.customerId,
+                    sourceType: 'outbound',
+                    sourceFaxId: String(args.outboundFaxId),
+                    title: args.subject || `Fax to ${args.recipientName || args.recipientNumber}`,
+                    documentType: undefined,
+                    fromNumber: undefined,
+                    toNumber: args.recipientNumber,
+                    numPages: undefined,
+                    extractedText: args.message,
+                    r2ObjectKey: args.r2ObjectKey,
+                    fileName: undefined,
+                    fileSize: undefined,
+                    mimeType: 'application/pdf',
+                });
+            } catch (archiveError) {
+                console.error('[OUTBOUND FAX] Document archive failed (non-fatal):', archiveError);
+            }
+
             return { success: true, providerFaxId };
 
         } catch (error) {

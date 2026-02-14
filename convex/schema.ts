@@ -222,5 +222,118 @@ export default defineSchema({
         generatedAt: v.number(),
     })
         .index('by_outboundFax', ['outboundFaxId']),
+
+    // ─── Document Library ────────────────────────────────────
+    // Auto-created from inbound/outbound faxes. Persistent archive per customer.
+
+    documentLibrary: defineTable({
+        customerId: v.id('customers'),
+        sourceType: v.string(), // 'inbound' | 'outbound'
+        sourceFaxId: v.optional(v.string()), // reference to inbound or outbound fax ID (string, not typed ref)
+        // Document info
+        title: v.string(),
+        documentType: v.optional(v.string()),
+        fromNumber: v.optional(v.string()),
+        toNumber: v.optional(v.string()),
+        numPages: v.optional(v.number()),
+        extractedText: v.optional(v.string()),
+        // Storage
+        storageId: v.optional(v.id('_storage')),
+        r2ObjectKey: v.optional(v.string()),
+        fileName: v.optional(v.string()),
+        fileSize: v.optional(v.number()),
+        mimeType: v.optional(v.string()),
+        // Organization
+        starred: v.boolean(),
+        tags: v.array(v.string()),
+        // Metadata
+        archivedAt: v.number(),
+        createdAt: v.number(),
+    })
+        .index('by_customer', ['customerId'])
+        .index('by_customer_type', ['customerId', 'documentType'])
+        .index('by_customer_starred', ['customerId', 'starred'])
+        .searchIndex('search_text', { searchField: 'extractedText', filterFields: ['customerId'] }),
+
+    // ─── Agentic Workflows ───────────────────────────────────
+    // Customer-defined automation workflows triggered on inbound fax events.
+
+    workflows: defineTable({
+        customerId: v.id('customers'),
+        name: v.string(),
+        description: v.optional(v.string()),
+        enabled: v.boolean(),
+        priority: v.number(), // lower = runs first
+        // Trigger
+        triggerType: v.string(), // 'on_receive', 'on_type', 'on_urgency', 'on_keyword'
+        triggerConfig: v.object({
+            documentTypes: v.optional(v.array(v.string())),
+            urgencyLevels: v.optional(v.array(v.string())),
+            keywords: v.optional(v.array(v.string())),
+        }),
+        // Steps (sequential actions)
+        steps: v.array(v.object({
+            id: v.string(),
+            actionType: v.string(), // 'route_to', 'email_to', 'assign_to', 'tag', 'forward_fax', 'webhook', 'ai_summarize', 'delay', 'condition'
+            config: v.object({
+                recipientId: v.optional(v.string()),
+                emailAddress: v.optional(v.string()),
+                assigneeEmail: v.optional(v.string()),
+                tagName: v.optional(v.string()),
+                faxNumber: v.optional(v.string()),
+                webhookUrl: v.optional(v.string()),
+                delayMinutes: v.optional(v.number()),
+                conditionField: v.optional(v.string()),
+                conditionOperator: v.optional(v.string()),
+                conditionValue: v.optional(v.string()),
+            }),
+            label: v.optional(v.string()),
+        })),
+        // Stats
+        totalExecutions: v.number(),
+        lastExecutedAt: v.optional(v.number()),
+        createdAt: v.number(),
+        updatedAt: v.optional(v.number()),
+    })
+        .index('by_customer', ['customerId'])
+        .index('by_customer_enabled', ['customerId', 'enabled']),
+
+    // Workflow execution log
+    workflowExecutions: defineTable({
+        workflowId: v.id('workflows'),
+        customerId: v.id('customers'),
+        inboundFaxId: v.id('inboundFaxes'),
+        status: v.string(), // 'running', 'completed', 'failed', 'skipped'
+        stepsCompleted: v.number(),
+        totalSteps: v.number(),
+        stepResults: v.array(v.object({
+            stepId: v.string(),
+            actionType: v.string(),
+            status: v.string(), // 'success', 'failed', 'skipped'
+            result: v.optional(v.string()),
+            executedAt: v.number(),
+        })),
+        error: v.optional(v.string()),
+        startedAt: v.number(),
+        completedAt: v.optional(v.number()),
+    })
+        .index('by_workflow', ['workflowId'])
+        .index('by_customer', ['customerId'])
+        .index('by_fax', ['inboundFaxId']),
+
+    // Team member queues (for assign_to workflow action)
+    workflowQueues: defineTable({
+        customerId: v.id('customers'),
+        assigneeEmail: v.string(),
+        inboundFaxId: v.id('inboundFaxes'),
+        workflowId: v.id('workflows'),
+        status: v.string(), // 'pending', 'in_review', 'completed', 'dismissed'
+        notes: v.optional(v.string()),
+        assignedAt: v.number(),
+        completedAt: v.optional(v.number()),
+    })
+        .index('by_assignee', ['assigneeEmail', 'status'])
+        .index('by_customer', ['customerId'])
+        .index('by_fax', ['inboundFaxId']),
 });
 
