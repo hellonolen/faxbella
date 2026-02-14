@@ -534,16 +534,17 @@ export const getDocumentForAction = internalQuery({
 /* ─── Retention Policy Enforcement ───────────────────── */
 
 /**
- * Retention policy constants per plan tier.
- * Day Pass: 30 days retention
- * Membership: 730 days (2 years) retention
+ * Retention policy: 10 years after last encounter (customer activity).
+ * Documents are only purged 10 years after the customer explicitly deletes
+ * or after 10 years of complete account inactivity. All plans get the same
+ * retention period — HIPAA and healthcare compliance require long retention.
  */
 const RETENTION_DAYS: Record<string, number> = {
-    daypass: 30,
-    standard: 730,
-    starter: 730,
-    business: 730,
-    enterprise: 730,
+    daypass: 3650,   // 10 years
+    standard: 3650,  // 10 years
+    starter: 3650,
+    business: 3650,
+    enterprise: 3650,
 };
 
 /**

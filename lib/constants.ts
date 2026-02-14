@@ -79,17 +79,19 @@ export const PLANS = {
 } as const;
 
 // Storage & Retention Policy
+// Documents retained for 10 years after last encounter (customer activity).
+// Only purged 10 years after the customer explicitly deletes, OR account is inactive 10 years.
 export const STORAGE_LIMITS = {
   daypass: {
     baseMb: 500,
     perBlockMb: 0,
-    retentionDays: 30,
+    retentionDays: 3650, // 10 years
     label: '500 MB',
   },
   standard: {
     baseMb: 10240, // 10 GB
     perBlockMb: 5120, // +5 GB per extra block
-    retentionDays: 730, // 2 years
+    retentionDays: 3650, // 10 years
     label: '10 GB',
   },
 } as const;

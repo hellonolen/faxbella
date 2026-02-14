@@ -287,14 +287,13 @@ export const getStorageUsage = query({
         const blocks = Math.max(1, Math.round(faxesLimit / 1000));
 
         let storageLimitMb: number;
-        let retentionDays: number;
+        // 10-year retention for ALL plans (HIPAA compliance)
+        const retentionDays = 3650;
 
         if (plan === 'daypass') {
             storageLimitMb = 500;
-            retentionDays = 30;
         } else {
             storageLimitMb = 10240 + ((blocks - 1) * 5120); // 10GB base + 5GB per extra block
-            retentionDays = 730; // 2 years
         }
 
         return {
