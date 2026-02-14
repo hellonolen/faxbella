@@ -36,10 +36,10 @@ export const PLAN = {
   key: 'standard',
   name: 'FaxBella Membership',
   price: 55,
-  faxBlock: 500,
+  faxBlock: 1000,
   recipientLimit: Infinity,
   features: [
-    '500 faxes per month',
+    '1,000 faxes per month (send + receive)',
     'Unlimited recipients',
     'AI-powered routing',
     'Priority detection & routing',
@@ -148,7 +148,7 @@ export const DASHBOARD_NAV_ITEMS = [
 ] as const;
 
 export const DASHBOARD_STATS = [
-  { label: 'Faxes This Month', value: '47', limit: '500', icon: 'FileText' as const },
+  { label: 'Faxes This Month', value: '47', limit: '1000', icon: 'FileText' as const },
   { label: 'Recipients', value: '4', icon: 'Users' as const },
   { label: 'Routing Accuracy', value: '94%', icon: 'Target' as const },
   { label: 'Avg. Processing', value: '3.2s', icon: 'Clock' as const },
@@ -474,7 +474,7 @@ export const MOCK_DASHBOARD_DATA = {
     plan: 'standard',
     planStatus: 'active',
     faxesThisMonth: 47,
-    faxesLimit: 500,
+    faxesLimit: 1000,
     recipientLimit: 999999,
     faxNumber: '+15551234567',
     humbleFaxAccessKey: '***configured***',

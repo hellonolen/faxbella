@@ -22,9 +22,9 @@ import MarketingFooter from '@/components/marketing-footer';
    ============================================ */
 
 const AUTO_EXPAND_TABLE = [
-  { range: '1 - 500', blocks: 1, cost: '$55' },
-  { range: '501 - 1,000', blocks: 2, cost: '$110' },
-  { range: '1,001 - 1,500', blocks: 3, cost: '$165' },
+  { range: '1 - 1,000', blocks: 1, cost: '$55' },
+  { range: '1,001 - 2,000', blocks: 2, cost: '$110' },
+  { range: '2,001 - 3,000', blocks: 3, cost: '$165' },
 ];
 
 const DAYPASS_EXPAND_TABLE = [
@@ -36,20 +36,20 @@ const DAYPASS_EXPAND_TABLE = [
 const AUTO_EXPAND_STEPS = [
   {
     icon: Layers,
-    title: 'You get 500 faxes every month',
+    title: 'You get 1,000 faxes every month',
     description:
-      'Your membership includes 500 faxes per billing cycle. Send, receive, and route all of them with AI.',
+      'Your membership includes 1,000 faxes per billing cycle. Send, receive, and route all of them with AI.',
   },
   {
     icon: TrendingUp,
-    title: 'Exceed 500? We add another block automatically',
+    title: 'Exceed 1,000? We add another block automatically',
     description:
-      'If your volume grows past 500, we add another 500-fax block for $55. No interruptions, no manual upgrades.',
+      'If your volume grows past 1,000, we add another 1,000-fax block for $55. No interruptions, no manual upgrades.',
   },
   {
     icon: Calculator,
     title: 'Simple formula, no surprises',
-    description: 'Your monthly cost is always ceil(usage / 500) x $55. You only pay for what you use.',
+    description: 'Your monthly cost is always ceil(usage / 1000) x $55. You only pay for what you use.',
   },
 ];
 
@@ -96,12 +96,12 @@ const FAQ_ITEMS = [
   {
     question: 'What\'s the difference between Day Pass and Membership?',
     answer:
-      'Day Pass gives you 5 documents and 8 hours of access for $9 — perfect for quick one-off jobs. Membership gives you 500 faxes per month for $55 — built for offices and businesses that fax regularly. Both include all features and both auto-expand if you need more.',
+      'Day Pass gives you 5 documents and 8 hours of access for $9 — perfect for quick one-off jobs. Membership gives you 1,000 faxes per month for $55 — built for offices and businesses that fax regularly. Both include all features and both auto-expand if you need more.',
   },
   {
-    question: 'What happens if I go over 500 faxes?',
+    question: 'What happens if I go over 1,000 faxes?',
     answer:
-      'We automatically add another 500-fax block for $55. There is no interruption to your service. Your monthly bill is always ceil(usage / 500) x $55, so you only pay for what you actually use.',
+      'We automatically add another 1,000-fax block for $55. There is no interruption to your service. Your monthly bill is always ceil(usage / 1000) x $55, so you only pay for what you actually use.',
   },
   {
     question: 'How do I cancel?',
@@ -528,7 +528,7 @@ export default function PricingPage() {
                 </span>
                 <div className="mt-2 inline-block bg-[var(--color-vc-surface-dark)] rounded-lg px-6 py-3">
                   <code className="font-mono text-sm text-[var(--color-vc-text-on-dark)]">
-                    ceil(faxes / 500) &times; $55
+                    ceil(faxes / 1000) &times; $55
                   </code>
                 </div>
               </div>

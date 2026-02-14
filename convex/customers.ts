@@ -15,14 +15,14 @@ function generateWebhookSecret(): string {
     return secret;
 }
 
-// Plan limits — single-tier pricing: $55/mo per 500-fax block, unlimited recipients
+// Plan limits — single-tier pricing: $55/mo per 1000-fax block, unlimited recipients
 const PLAN_LIMITS: Record<string, { faxes: number; recipients: number }> = {
-    standard: { faxes: 500, recipients: 999999 },
+    standard: { faxes: 1000, recipients: 999999 },
     daypass: { faxes: 5, recipients: 999999 },
     // Legacy support
-    starter: { faxes: 500, recipients: 999999 },
-    business: { faxes: 500, recipients: 999999 },
-    enterprise: { faxes: 500, recipients: 999999 },
+    starter: { faxes: 1000, recipients: 999999 },
+    business: { faxes: 1000, recipients: 999999 },
+    enterprise: { faxes: 1000, recipients: 999999 },
 };
 
 // Create customer after Stripe checkout

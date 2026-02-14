@@ -23,12 +23,12 @@ import Stripe from 'stripe';
 // ─── Constants ───────────────────────────────────────────
 
 const PLAN_LIMITS: Record<string, { faxes: number; recipients: number }> = {
-    standard: { faxes: 500, recipients: 999999 },
+    standard: { faxes: 1000, recipients: 999999 },
     daypass: { faxes: 5, recipients: 999999 },
     // Legacy support
-    starter: { faxes: 500, recipients: 999999 },
-    business: { faxes: 500, recipients: 999999 },
-    enterprise: { faxes: 500, recipients: 999999 },
+    starter: { faxes: 1000, recipients: 999999 },
+    business: { faxes: 1000, recipients: 999999 },
+    enterprise: { faxes: 1000, recipients: 999999 },
 };
 
 const VALID_PLANS = ['standard', 'daypass', 'starter', 'business', 'enterprise'];

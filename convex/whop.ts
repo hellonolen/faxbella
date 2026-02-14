@@ -184,12 +184,12 @@ export const handleWhopSubscriptionCreated = internalMutation({
             .first();
 
         const planLimits: Record<string, { faxes: number }> = {
-            standard: { faxes: 500 },
+            standard: { faxes: 1000 },
             daypass: { faxes: 5 },
             // Legacy support
-            starter: { faxes: 500 },
-            business: { faxes: 500 },
-            enterprise: { faxes: 500 },
+            starter: { faxes: 1000 },
+            business: { faxes: 1000 },
+            enterprise: { faxes: 1000 },
         };
 
         const limits = planLimits[args.plan] || planLimits.standard;

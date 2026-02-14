@@ -3,8 +3,8 @@
 ## Pricing Philosophy
 
 1. **Simple**: One plan, one price, everything included
-2. **Predictable**: $55/month flat rate per 500-fax block
-3. **Scalable**: Exceed 500 faxes and another $55 block is added automatically
+2. **Predictable**: $55/month flat rate per 1,000-fax block
+3. **Scalable**: Exceed 1,000 faxes and another $55 block is added automatically
 4. **Honest**: No hidden fees, no gotchas, no feature gating
 
 ## FaxBella Membership - $55/month
@@ -13,7 +13,7 @@
 
 | Feature | Included |
 |---------|----------|
-| Faxes/month | 500 per block |
+| Faxes/month | 1,000 per block |
 | Recipients | Unlimited |
 | AI-powered routing | Yes |
 | Document classification | Yes |
@@ -30,16 +30,16 @@
 
 ### Overage Model
 
-No per-fax overage charges. Instead, usage auto-scales in 500-fax blocks:
+No per-fax overage charges. Instead, usage auto-scales in 1,000-fax blocks:
 
 | Faxes Used | Monthly Cost | Formula |
 |------------|-------------|---------|
-| 1 - 500 | $55 | 1 block |
-| 501 - 1,000 | $110 | 2 blocks |
-| 1,001 - 1,500 | $165 | 3 blocks |
-| 1,501 - 2,000 | $220 | 4 blocks |
+| 1 - 1,000 | $55 | 1 block |
+| 1,001 - 2,000 | $110 | 2 blocks |
+| 2,001 - 3,000 | $165 | 3 blocks |
+| 3,001 - 4,000 | $220 | 4 blocks |
 
-Formula: `ceil(usage / 500) * $55`
+Formula: `ceil(usage / 1000) * $55`
 
 ---
 
@@ -118,8 +118,8 @@ Formula: `ceil(usage / 500) * $55`
 ### "How do I know it'll work for us?"
 > "Try it free for 14 days. Route your next 50 faxes and measure the time savings yourself."
 
-### "What if we need more than 500 faxes?"
-> "No problem. Usage auto-scales in 500-fax blocks at $55 each. No per-fax nickel-and-diming. A practice doing 1,000 faxes pays $110/month -- still cheaper than manual sorting."
+### "What if we need more than 1,000 faxes?"
+> "No problem. Usage auto-scales in 1,000-fax blocks at $55 each. No per-fax nickel-and-diming. A practice doing 2,000 faxes pays $110/month -- still cheaper than manual sorting."
 
 ---
 

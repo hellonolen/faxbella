@@ -302,8 +302,8 @@ export default function BillingPage() {
             <p className="text-sm text-[var(--color-vc-text-secondary)] leading-relaxed">
               {isDayPass
                 ? `When you exceed ${DAY_PASS.faxBlock} documents, we auto-add another ${DAY_PASS.faxBlock}-doc block for $${DAY_PASS.price}.`
-                : `When you exceed ${PLAN.faxBlock} faxes, we automatically add another ${PLAN.faxBlock}-fax block for $${PLAN.price}.`}{' '}
-              You only pay for what you need.
+                : `When you exceed ${PLAN.faxBlock} faxes, we automatically add another ${PLAN.faxBlock}-fax block for $${PLAN.price}.`}
+              {' '}You only pay for what you need.
             </p>
           </div>
         </div>
