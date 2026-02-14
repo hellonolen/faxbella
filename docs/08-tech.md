@@ -10,7 +10,7 @@
 | **Auth** | Passkeys (WebAuthn) | Passwordless authentication via `convex/passkeys.ts` + `hooks/use-passkey.ts` | Active |
 | **Payments (Primary)** | Stripe | Subscriptions, checkout via `convex/stripe.ts` | Active |
 | **Payments (Backup)** | Whop | Backup payment processor, admin-toggleable via `convex/whop.ts` | Active |
-| **Fax Provider (Primary)** | Faxbot (FreeSWITCH) | Self-hosted Docker-based fax server at `infra/faxbot/`. REST API + HIPAA compliant. | Active (not yet deployed) |
+| **Fax Provider (Primary)** | Faxbot (FreeSWITCH) | Self-hosted Docker-based fax server at `infra/faxbot/`. REST API + HIPAA compliant. | Active (API running on VPS 144.202.25.33:8080) |
 | **Fax Provider (Legacy)** | HumbleFax | Inbound/outbound fax API. Code remains in codebase but NOT active. Kept as fallback. | Legacy (not active) |
 | **SIP Trunk** | BulkVS | SIP trunk provider ($0.0003/min inbound, $0.004/min outbound) | Selected |
 | **Email** | EmailIt | Transactional email delivery (ONLY provider — never Resend/SendGrid) | Active |
@@ -65,18 +65,23 @@
 │  │  6. Update inboundFaxes table                                        │ │
 │  │  7. Create in-app notification (convex/notifications.ts)             │ │
 │  │  8. Send email notification via EmailIt                              │ │
-│  │  9. Optional: Send webhook to customer endpoint                      │ │
+│  │  9. Archive to document library (convex/documentLibrary.ts)          │ │
+│  │  10. Execute matching agentic workflows (convex/workflows.ts)        │ │
 │  └─────────────────────────────────────────────────────────────────────┘ │
 │                                │                                          │
 │                                ▼                                          │
 │  ┌─────────────────────────────────────────────────────────────────────┐ │
-│  │                      CONVEX TABLES (8 tables)                        │ │
+│  │                      CONVEX TABLES (12 tables)                       │ │
 │  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐                 │ │
 │  │  │  customers   │ │  recipients  │ │ inboundFaxes │                 │ │
 │  │  └──────────────┘ └──────────────┘ └──────────────┘                 │ │
 │  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐                 │ │
 │  │  │outboundFaxes │ │  passkey*    │ │paymentSettings│                │ │
 │  │  │(+ file upload)│ │  (3 tables) │ │(Stripe/Whop) │                 │ │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘                 │ │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐                 │ │
+│  │  │documentLibrary│ │  workflows  │ │workflowExec  │                 │ │
+│  │  │(full-text srch)│ │(agentic)   │ │workflowQueues│                 │ │
 │  │  └──────────────┘ └──────────────┘ └──────────────┘                 │ │
 │  └─────────────────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -97,7 +102,7 @@
 
 ## Database Schema
 
-### Tables (8 total)
+### Tables (12 total)
 
 ```typescript
 // customers - SaaS customers (businesses)
@@ -231,6 +236,71 @@ paymentSettings: {
   whopEnabled: boolean,
   updatedAt: number,
 }
+
+// documentLibrary - Persistent document archive (inbound + outbound)
+documentLibrary: {
+  customerId: Id<'customers'>,
+  sourceType: 'inbound' | 'outbound',
+  sourceFaxId: string,
+  title: string,
+  documentType?: string,
+  fromNumber?: string,
+  toNumber?: string,
+  numPages?: number,
+  extractedText?: string,       // Full-text searchable
+  r2ObjectKey?: string,
+  fileName?: string,
+  fileSize?: number,
+  mimeType?: string,
+  starred: boolean,
+  tags: string[],
+  archivedAt: number,
+}
+
+// workflows - Agentic workflow definitions
+workflows: {
+  customerId: Id<'customers'>,
+  name: string,
+  description?: string,
+  enabled: boolean,
+  triggerType: 'on_receive' | 'on_type' | 'on_urgency' | 'on_keyword',
+  triggerConfig: {               // Varies by triggerType
+    documentTypes?: string[],
+    urgencyLevels?: string[],
+    keywords?: string[],
+  },
+  steps: Array<{
+    action: string,              // route_to, email_to, assign_to, tag, forward_fax, webhook, ai_summarize, delay, condition
+    config: Record<string, any>,
+    order: number,
+  }>,
+  createdAt: number,
+  updatedAt: number,
+}
+
+// workflowExecutions - Execution log for workflow runs
+workflowExecutions: {
+  workflowId: Id<'workflows'>,
+  customerId: Id<'customers'>,
+  inboundFaxId: Id<'inboundFaxes'>,
+  status: 'running' | 'completed' | 'failed',
+  stepsCompleted: number,
+  totalSteps: number,
+  error?: string,
+  startedAt: number,
+  completedAt?: number,
+}
+
+// workflowQueues - Review queue items assigned to team members
+workflowQueues: {
+  customerId: Id<'customers'>,
+  inboundFaxId: Id<'inboundFaxes'>,
+  assigneeEmail: string,
+  status: 'pending' | 'in_review' | 'completed' | 'dismissed',
+  notes?: string,
+  assignedAt: number,
+  updatedAt?: number,
+}
 ```
 
 ### Indexes
@@ -269,6 +339,26 @@ passkeySessions.by_userId: [userId]
 
 // Payment Settings
 paymentSettings.by_activeProcessor: [activeProcessor]
+
+// Document Library
+documentLibrary.by_customer: [customerId, _creationTime]
+documentLibrary.by_customer_type: [customerId, documentType, _creationTime]
+documentLibrary.by_customer_starred: [customerId, starred, _creationTime]
+documentLibrary.search_text: (text) extractedText, filter on customerId
+
+// Workflows
+workflows.by_customer: [customerId, _creationTime]
+workflows.by_customer_enabled: [customerId, enabled, _creationTime]
+
+// Workflow Executions
+workflowExecutions.by_workflow: [workflowId, _creationTime]
+workflowExecutions.by_customer: [customerId, _creationTime]
+workflowExecutions.by_fax: [inboundFaxId, _creationTime]
+
+// Workflow Queues
+workflowQueues.by_assignee: [assigneeEmail, status, _creationTime]
+workflowQueues.by_customer: [customerId, _creationTime]
+workflowQueues.by_fax: [inboundFaxId, _creationTime]
 ```
 
 ## API Design
@@ -302,6 +392,15 @@ paymentSettings.by_activeProcessor: [activeProcessor]
 | `notifications.create` | `convex/notifications.ts` | Create in-app notification |
 | `notifications.markRead` | `convex/notifications.ts` | Mark notification as read |
 | `coverPage.generate` | `convex/coverPage.ts` | Generate fax cover page |
+| `documentLibrary.archiveDocument` | `convex/documentLibrary.ts` | Archive fax to document library (internal) |
+| `documentLibrary.starDocument` | `convex/documentLibrary.ts` | Toggle document starred status |
+| `documentLibrary.tagDocument` | `convex/documentLibrary.ts` | Add/remove tags on document |
+| `workflows.createWorkflow` | `convex/workflows.ts` | Create agentic workflow |
+| `workflows.updateWorkflow` | `convex/workflows.ts` | Update workflow config |
+| `workflows.deleteWorkflow` | `convex/workflows.ts` | Delete workflow |
+| `workflows.toggleWorkflow` | `convex/workflows.ts` | Enable/disable workflow |
+| `workflows.createQueueItem` | `convex/workflows.ts` | Assign fax to review queue (internal) |
+| `workflows.updateQueueItem` | `convex/workflows.ts` | Update queue item status/notes |
 
 ### Convex Queries
 
@@ -317,6 +416,12 @@ paymentSettings.by_activeProcessor: [activeProcessor]
 | `passkeys.getCredentials` | `convex/passkeys.ts` | Get user's registered passkeys |
 | `notifications.list` | `convex/notifications.ts` | List user notifications |
 | `whop.getPaymentSettings` | `convex/whop.ts` | Get active payment processor setting |
+| `documentLibrary.listDocuments` | `convex/documentLibrary.ts` | List documents with filters (source, type, starred, tags) |
+| `documentLibrary.searchDocuments` | `convex/documentLibrary.ts` | Full-text search across document library |
+| `documentLibrary.getDocument` | `convex/documentLibrary.ts` | Get single document details |
+| `workflows.listWorkflows` | `convex/workflows.ts` | List customer's workflows |
+| `workflows.getWorkflow` | `convex/workflows.ts` | Get single workflow details |
+| `workflows.listQueueItems` | `convex/workflows.ts` | List review queue items with status filter |
 
 ### Convex Actions
 
@@ -325,7 +430,11 @@ paymentSettings.by_activeProcessor: [activeProcessor]
 | `faxRouting.processInboundFaxWithAI` | `convex/faxRouting.ts` | Main AI routing action |
 | `outboundFax.send` | `convex/outboundFax.ts` | Send outbound fax (supports file upload) |
 | `passkeys.generateChallenge` | `convex/passkeys.ts` | Generate WebAuthn challenge |
-| `stripe.createCheckoutSession` | `convex/stripe.ts` | Create Stripe checkout session |
+| `stripe.createCheckoutSession` | `convex/stripe.ts` | Create Stripe checkout session (supports quantity 1-5) |
+| `documentLibrary.reshareDocument` | `convex/documentLibrary.ts` | Reshare document via EmailIt |
+| `documentLibrary.resendDocument` | `convex/documentLibrary.ts` | Resend document as fax via Faxbot |
+| `workflows.executeWorkflows` | `convex/workflows.ts` | Execute matching workflows for inbound fax (internal) |
+| `workflows.runWorkflow` | `convex/workflows.ts` | Execute single workflow step chain (internal) |
 
 ## AI Processing Pipeline
 
@@ -395,6 +504,16 @@ await ctx.runMutation(internal.notifications.create, {
 
 // 8. Send email notification
 await sendEmailNotification(recipientEmail, faxData);
+
+// 9. Archive to document library
+await ctx.runMutation(internal.documentLibrary.archiveDocument, {
+  customerId, sourceType: 'inbound', sourceFaxId, title, ...
+});
+
+// 10. Execute matching agentic workflows
+await ctx.runAction(internal.workflows.executeWorkflows, {
+  customerId, inboundFaxId,
+});
 ```
 
 ## Deployment
@@ -429,9 +548,10 @@ await sendEmailNotification(recipientEmail, faxData);
 | Runtime | Docker container |
 | Engine | FreeSWITCH + REST API |
 | Location | `infra/faxbot/` in repo |
-| Host | Vultr VPS ($20/mo, HIPAA BAA) |
+| Host | Vultr VPS (144.202.25.33, $24/mo 2vCPU/4GB, HIPAA BAA) |
 | SIP Trunk | BulkVS ($0.0003/min inbound, $0.004/min outbound) |
-| Status | Cloned, not yet deployed |
+| Status | API container running, Asterisk awaiting SIP trunk config |
+| SSH Key | ~/.ssh/faxbella_ed25519 |
 
 ### Environment Variables
 

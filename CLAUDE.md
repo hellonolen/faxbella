@@ -10,7 +10,7 @@ FaxBella (faxbella.com) is an AI-powered fax routing SaaS platform built by Docl
 - **Backend:** Convex (serverless functions, real-time database)
 - **AI:** Google Gemini 2.0 Flash (OCR, document classification, routing)
 - **Payments:** Stripe (primary), Whop (backup, admin-toggleable)
-- **Fax Provider:** HumbleFax API
+- **Fax Provider:** Faxbot (self-hosted FreeSWITCH, VPS 144.202.25.33)
 - **Auth:** WebAuthn Passkeys (convex/passkeys.ts, hooks/use-passkey.ts)
 - **Deployment:** Cloudflare Pages/Workers via OpenNext
 - **Domain:** faxbella.com
@@ -47,17 +47,34 @@ faxbella/
 │   ├── global-error.tsx          # Global error boundary
 │   ├── ConvexClientProvider.tsx   # Convex React client setup
 │   ├── globals.css               # Global styles
+│   ├── dashboard/
+│   │   ├── page.tsx              # Dashboard overview
+│   │   ├── library/page.tsx      # Document library (search, star, tag, reshare, resend)
+│   │   ├── workflows/page.tsx    # Agentic workflow builder (triggers + steps)
+│   │   ├── queue/page.tsx        # Review queue (assigned fax items)
+│   │   ├── inbox/page.tsx        # Inbound fax inbox
+│   │   ├── send/page.tsx         # Send fax with file upload
+│   │   ├── sent/page.tsx         # Sent fax history
+│   │   ├── recipients/page.tsx   # Recipient CRUD
+│   │   ├── settings/page.tsx     # Account settings
+│   │   └── billing/page.tsx      # Billing management
 │   └── (static)/                 # Static legal pages
 │       ├── privacy/page.tsx
 │       └── terms/page.tsx
 ├── convex/                       # Convex backend
-│   ├── schema.ts                 # Database schema (customers, recipients, faxes, passkeys, payments)
+│   ├── schema.ts                 # Database schema (12 tables)
 │   ├── customers.ts              # Customer CRUD and dashboard data
 │   ├── recipients.ts             # Recipient management
-│   ├── faxRouting.ts             # Core AI routing engine
-│   ├── outboundFax.ts            # Sending faxes via HumbleFax
+│   ├── faxRouting.ts             # Core AI routing engine (+ archive + workflow trigger)
+│   ├── outboundFax.ts            # Sending faxes via Faxbot (+ archive)
+│   ├── documentLibrary.ts        # Document archive (search, star, tag, reshare, resend)
+│   ├── workflows.ts              # Agentic workflow engine (triggers, steps, queue)
+│   ├── notifications.ts          # In-app notification system
+│   ├── coverPage.ts              # Fax cover page generation
+│   ├── stripe.ts                 # Stripe payment processor (quantity support)
 │   ├── passkeys.ts               # WebAuthn passkey auth + sessions
 │   ├── whop.ts                   # Whop payment processor (backup)
+│   ├── r2.ts                     # R2 file storage operations
 │   └── http.ts                   # HTTP webhook handlers
 ├── hooks/
 │   └── use-passkey.ts            # React hook for passkey auth
@@ -72,12 +89,16 @@ faxbella/
 └── next.config.mjs
 ```
 
-## Database Tables (Convex)
+## Database Tables (Convex) — 12 tables
 
-- **customers** - SaaS customer accounts (email, plan, Stripe IDs, HumbleFax credentials)
+- **customers** - SaaS customer accounts (email, plan, Stripe IDs, Faxbot credentials)
 - **recipients** - Fax recipients within customer organizations
 - **inboundFaxes** - Processed incoming faxes with AI extraction data
-- **outboundFaxes** - Sent faxes
+- **outboundFaxes** - Sent faxes (with file upload + cover page)
+- **documentLibrary** - Persistent fax archive (full-text search, starring, tagging)
+- **workflows** - Agentic workflow definitions (triggers + step chains)
+- **workflowExecutions** - Workflow execution log
+- **workflowQueues** - Review queue items assigned to team members
 - **passkeyCredentials** - WebAuthn public key credentials
 - **passkeyChallenge** - Temporary registration/auth challenges
 - **passkeySessions** - Active user sessions
@@ -86,8 +107,10 @@ faxbella/
 ## Environment Variables
 
 All secrets are stored in Convex Dashboard (Settings > Environment Variables):
-- `HUMBLEFAX_ACCESS_KEY` - HumbleFax API access
-- `HUMBLEFAX_SECRET_KEY` - HumbleFax API secret
+- `FAXBOT_API_KEY` - Faxbot REST API key
+- `FAXBOT_API_URL` - Faxbot API URL (http://144.202.25.33:8080)
+- `HUMBLEFAX_ACCESS_KEY` - HumbleFax API access (legacy, inactive)
+- `HUMBLEFAX_SECRET_KEY` - HumbleFax API secret (legacy, inactive)
 - `GEMINI_API_KEY` - Google Gemini AI
 - `EMAILIT_API_KEY` - EmailIt email delivery
 - `STRIPE_SECRET_KEY` - Stripe payments
