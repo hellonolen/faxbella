@@ -16,14 +16,16 @@ import {
   Fingerprint,
   Mail,
   CreditCard,
+  ShoppingBag,
 } from 'lucide-react';
 import { useDashboard } from '@/hooks/use-dashboard';
 import { usePasskey } from '@/hooks/use-passkey';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Toggle } from '@/components/ui/toggle';
 import { Skeleton } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
-import { PLANS } from '@/lib/constants';
+import { PLANS, ADMIN_EMAILS } from '@/lib/constants';
 
 /* ----------------------------------------
    Constants
@@ -516,6 +518,86 @@ function WebhookSection({ sessionToken }: { sessionToken: string | undefined }) 
 }
 
 /* ----------------------------------------
+   Section: Payment Processor (Admin Only)
+   ---------------------------------------- */
+
+function PaymentProcessorSection({ email }: { email: string }) {
+  const activeProcessorData = useQuery(api.whop.getActiveProcessor);
+  const setActiveProcessor = useMutation(api.whop.setActiveProcessor);
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+
+  const isAdmin = (ADMIN_EMAILS as readonly string[]).includes(email);
+
+  if (!isAdmin) return null;
+
+  const activeProcessor = activeProcessorData?.activeProcessor ?? 'stripe';
+  const isWhopActive = activeProcessor === 'whop';
+
+  const handleToggle = async (useWhop: boolean) => {
+    setSaving(true);
+    setFeedback(null);
+
+    try {
+      const processor = useWhop ? 'whop' : 'stripe';
+      await setActiveProcessor({ processor, adminEmail: email });
+
+      setFeedback({
+        type: 'success',
+        message: `Payment processor switched to ${processor === 'whop' ? 'Whop' : 'Stripe'}.`,
+      });
+
+      setTimeout(() => setFeedback(null), FEEDBACK_DURATION_MS);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to update processor.';
+      setFeedback({ type: 'error', message: msg });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card accent>
+      <SectionHeader icon={ShoppingBag} title="Payment Processor" />
+
+      <div className="space-y-4">
+        <div>
+          <span className="mono-label block mb-2">Active Processor</span>
+          <span
+            className={cn(
+              'inline-flex items-center gap-1.5',
+              'px-2.5 py-1 rounded-[var(--radius-sm)]',
+              'text-xs font-medium font-[family-name:var(--font-jetbrains)]',
+              'text-[var(--color-success)] bg-[var(--color-success-light)]',
+            )}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)]"
+              aria-hidden="true"
+            />
+            {activeProcessor === 'whop' ? 'Whop' : 'Stripe'}
+          </span>
+        </div>
+
+        <Toggle
+          checked={isWhopActive}
+          onChange={handleToggle}
+          label="Use Whop"
+          disabled={saving}
+        />
+
+        <p className="text-xs text-[var(--color-vc-text-tertiary)] leading-relaxed">
+          Only affects new subscriptions. Existing subscriptions continue on their original
+          processor.
+        </p>
+
+        <InlineFeedback feedback={feedback} />
+      </div>
+    </Card>
+  );
+}
+
+/* ----------------------------------------
    Section: Account
    ---------------------------------------- */
 
@@ -663,6 +745,8 @@ export default function SettingsPage() {
       />
 
       <WebhookSection sessionToken={session?.sessionToken} />
+
+      <PaymentProcessorSection email={email} />
 
       <AccountSection
         email={email}

@@ -5,12 +5,15 @@ import {
   FileText,
   Users,
   Target,
-  Clock,
+  HardDrive,
   ChevronRight,
   Send,
   Inbox,
 } from 'lucide-react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import { useDashboard } from '@/hooks/use-dashboard';
+import { usePasskey } from '@/hooks/use-passkey';
 import { StatCard } from '@/components/ui/card';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/loading';
@@ -42,6 +45,11 @@ function getRecipientLimit(plan: string): string {
   if (!planData) return '5';
   const limit = planData.recipientLimit;
   return limit === Infinity ? 'Unlimited' : String(limit);
+}
+
+function formatStorageSize(mb: number): string {
+  if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
+  return `${Math.round(mb)} MB`;
 }
 
 /* ----------------------------------------
@@ -200,6 +208,12 @@ function QuickActions() {
 
 export default function DashboardPage() {
   const { data, isLoading } = useDashboard();
+  const { session } = usePasskey();
+  const sessionToken = session?.sessionToken;
+  const storageData = useQuery(
+    api.customers.getStorageUsage,
+    sessionToken ? { sessionToken } : 'skip',
+  );
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -299,11 +313,75 @@ export default function DashboardPage() {
           label="Routing Accuracy"
         />
         <StatCard
-          icon={<Clock size={18} />}
-          value="3.2s"
-          label="Avg. Processing"
+          icon={<HardDrive size={18} />}
+          value={storageData ? formatStorageSize(storageData.totalMb) : '--'}
+          label="Storage Used"
+          limit={storageData ? formatStorageSize(storageData.storageLimitMb) : undefined}
         />
       </div>
+
+      {/* Storage Usage */}
+      {storageData && (
+        <Card>
+          <div className="space-y-3">
+            {/* Header row */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-[var(--color-vc-text)]">
+                {formatStorageSize(storageData.totalMb)} of{' '}
+                {formatStorageSize(storageData.storageLimitMb)} used
+              </span>
+              <span
+                className={cn(
+                  'font-[family-name:var(--font-jetbrains)]',
+                  'text-[10px] uppercase tracking-[0.15em]',
+                  'text-[var(--color-vc-text-tertiary)]',
+                )}
+              >
+                {storageData.documentCount} documents
+              </span>
+            </div>
+
+            {/* Progress bar */}
+            <div
+              className="h-2 w-full rounded-full bg-[var(--color-vc-surface)]"
+              role="progressbar"
+              aria-valuenow={storageData.usagePercent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Storage usage"
+            >
+              <div
+                className={cn(
+                  'h-full rounded-full transition-all duration-500 ease-out',
+                  storageData.usagePercent < 60 && 'bg-[var(--color-success)]',
+                  storageData.usagePercent >= 60 &&
+                    storageData.usagePercent < 80 &&
+                    'bg-[var(--color-warning)]',
+                  storageData.usagePercent >= 80 && 'bg-[var(--color-error)]',
+                )}
+                style={{ width: `${Math.min(storageData.usagePercent, 100)}%` }}
+              />
+            </div>
+
+            {/* Detail row */}
+            <div className="flex items-center justify-between text-xs text-[var(--color-vc-text-tertiary)]">
+              <span>
+                Retention: {storageData.retentionDays >= 365
+                  ? `${Math.round(storageData.retentionDays / 365)} year${Math.round(storageData.retentionDays / 365) === 1 ? '' : 's'}`
+                  : `${storageData.retentionDays} days`}
+              </span>
+              {storageData.oldestDocAt && (
+                <span>
+                  Oldest document: {Math.round(
+                    (Date.now() - storageData.oldestDocAt) / (1000 * 60 * 60 * 24),
+                  )}{' '}
+                  days ago
+                </span>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Two-column: Recent Faxes + Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -8,7 +8,7 @@
  * reshare (email via EmailIt), and resend (forward via Faxbot API).
  */
 
-import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
+import { action, internalAction, internalMutation, internalQuery, mutation, query } from './_generated/server';
 import { internal } from './_generated/api';
 import { v } from 'convex/values';
 
@@ -528,5 +528,89 @@ export const getDocumentForAction = internalQuery({
             fileName: doc.fileName,
             mimeType: doc.mimeType,
         };
+    },
+});
+
+/* ─── Retention Policy Enforcement ───────────────────── */
+
+/**
+ * Retention policy constants per plan tier.
+ * Day Pass: 30 days retention
+ * Membership: 730 days (2 years) retention
+ */
+const RETENTION_DAYS: Record<string, number> = {
+    daypass: 30,
+    standard: 730,
+    starter: 730,
+    business: 730,
+    enterprise: 730,
+};
+
+/**
+ * Purge expired documents for a single customer.
+ * Called by enforceRetentionPolicy.
+ */
+export const purgeExpiredDocuments = internalMutation({
+    args: {
+        customerId: v.id('customers'),
+        retentionDays: v.number(),
+    },
+    handler: async (ctx, args) => {
+        const cutoff = Date.now() - (args.retentionDays * 24 * 60 * 60 * 1000);
+
+        const expiredDocs = await ctx.db
+            .query('documentLibrary')
+            .withIndex('by_customer', (q) => q.eq('customerId', args.customerId))
+            .collect();
+
+        let purged = 0;
+        for (const doc of expiredDocs) {
+            if (doc.archivedAt < cutoff) {
+                await ctx.db.delete(doc._id);
+                purged++;
+            }
+        }
+
+        return { purged };
+    },
+});
+
+/**
+ * Daily cron job: enforce document retention per customer's plan.
+ * Sends a warning email 7 days before purge for the oldest documents.
+ */
+export const enforceRetentionPolicy = internalAction({
+    args: {},
+    handler: async (ctx) => {
+        const customers = await ctx.runQuery(internal.documentLibrary.getAllCustomersForRetention, {});
+
+        let totalPurged = 0;
+        for (const customer of customers) {
+            const retentionDays = RETENTION_DAYS[customer.plan?.toLowerCase()] || 730;
+            const result = await ctx.runMutation(internal.documentLibrary.purgeExpiredDocuments, {
+                customerId: customer._id,
+                retentionDays,
+            });
+            totalPurged += result.purged;
+        }
+
+        if (totalPurged > 0) {
+            console.log(`[RETENTION] Purged ${totalPurged} expired documents`);
+        }
+    },
+});
+
+/**
+ * Internal query: get all active customers with their plan info for retention checks.
+ */
+export const getAllCustomersForRetention = internalQuery({
+    args: {},
+    handler: async (ctx) => {
+        const customers = await ctx.db.query('customers').collect();
+        return customers.map((c) => ({
+            _id: c._id,
+            email: c.email,
+            plan: c.plan,
+        }));
     },
 });

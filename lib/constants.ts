@@ -78,6 +78,22 @@ export const PLANS = {
   daypass: DAY_PASS,
 } as const;
 
+// Storage & Retention Policy
+export const STORAGE_LIMITS = {
+  daypass: {
+    baseMb: 500,
+    perBlockMb: 0,
+    retentionDays: 30,
+    label: '500 MB',
+  },
+  standard: {
+    baseMb: 10240, // 10 GB
+    perBlockMb: 5120, // +5 GB per extra block
+    retentionDays: 730, // 2 years
+    label: '10 GB',
+  },
+} as const;
+
 export const STRIPE_PRICE_MAP: Record<string, string> = {
   standard: 'STRIPE_PRICE_STANDARD_MONTHLY',
   daypass: 'STRIPE_PRICE_DAYPASS',
