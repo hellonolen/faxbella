@@ -273,6 +273,145 @@ http.route({
     }),
 });
 
+// ─── Whop Webhook ───────────────────────────────────────
+
+http.route({
+    path: '/whop',
+    method: 'POST',
+    handler: httpAction(async (ctx, request) => {
+        const webhookSecret = process.env.WHOP_WEBHOOK_SECRET;
+        if (!webhookSecret) {
+            console.error('[WHOP] Webhook secret not configured');
+            return new Response(JSON.stringify({ error: 'Webhook not configured' }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        // Verify webhook signature
+        const signature = request.headers.get('whop-signature');
+        if (!signature) {
+            return new Response(JSON.stringify({ error: 'Missing whop-signature header' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        const rawBody = await request.text();
+
+        // HMAC-SHA256 verification
+        try {
+            const encoder = new TextEncoder();
+            const key = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(webhookSecret),
+                { name: 'HMAC', hash: 'SHA-256' },
+                false,
+                ['sign']
+            );
+            const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
+            const computed = Array.from(new Uint8Array(sig))
+                .map((b) => b.toString(16).padStart(2, '0'))
+                .join('');
+
+            if (computed !== signature) {
+                console.error('[WHOP] Webhook signature mismatch');
+                return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+                    status: 401,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+        } catch (err) {
+            console.error('[WHOP] Signature verification error:', err);
+            return new Response(JSON.stringify({ error: 'Signature verification failed' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        let payload;
+        try {
+            payload = JSON.parse(rawBody);
+        } catch {
+            return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        const eventType = payload.event || payload.action;
+        console.log(`[WHOP] Webhook event: ${eventType}`);
+
+        try {
+            switch (eventType) {
+                case 'membership_activated':
+                case 'payment_succeeded': {
+                    const membership = payload.data?.membership || payload.data;
+                    const email = membership?.metadata?.email || membership?.user?.email || '';
+                    const plan = membership?.metadata?.faxbella_plan || 'standard';
+                    const membershipId = membership?.id || '';
+                    const customerId = membership?.user?.id || '';
+
+                    if (email) {
+                        await ctx.runMutation(internal.whop.handleWhopSubscriptionCreated, {
+                            email,
+                            plan,
+                            whopMembershipId: membershipId,
+                            whopCustomerId: customerId,
+                        });
+
+                        await ctx.scheduler.runAfter(0, internal.whop.sendWhopEmail, {
+                            to: email,
+                            subject: 'Welcome to FaxBella',
+                            html: `<p>Your FaxBella ${plan} plan is now active. <a href="https://faxbella.com/dashboard">Go to your dashboard</a>.</p>`,
+                        });
+
+                        console.log(`[WHOP] Subscription created for ${email} (${plan})`);
+                    }
+                    break;
+                }
+
+                case 'membership_deactivated':
+                case 'payment_failed': {
+                    const membership = payload.data?.membership || payload.data;
+                    const membershipId = membership?.id || '';
+
+                    if (membershipId) {
+                        const result = await ctx.runMutation(internal.whop.handleWhopSubscriptionCancelled, {
+                            whopMembershipId: membershipId,
+                        });
+
+                        if (result.success && result.email) {
+                            await ctx.scheduler.runAfter(0, internal.whop.sendWhopEmail, {
+                                to: result.email,
+                                subject: 'FaxBella Subscription Update',
+                                html: '<p>Your FaxBella subscription has been deactivated. <a href="https://faxbella.com/pricing">Reactivate your plan</a>.</p>',
+                            });
+                        }
+
+                        console.log(`[WHOP] Subscription cancelled: ${membershipId}`);
+                    }
+                    break;
+                }
+
+                default:
+                    console.log(`[WHOP] Unhandled event type: ${eventType}`);
+            }
+        } catch (error) {
+            console.error(`[WHOP] Error processing ${eventType}:`, error);
+            return new Response(JSON.stringify({ received: true, error: 'Processing error logged' }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        return new Response(JSON.stringify({ received: true }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }),
+});
+
 // ─── Health Check ────────────────────────────────────────
 
 http.route({

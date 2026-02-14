@@ -24,13 +24,22 @@ import { internal } from './_generated/api';
 
 // Whop plan IDs must be configured in the Whop Dashboard
 // Map FaxBella plan names to Whop plan/product IDs
+function getWhopPlanId(plan: string): string {
+    const productId = process.env.WHOP_PRODUCT_ID;
+    if (!productId) {
+        throw new Error('WHOP_PRODUCT_ID not configured');
+    }
+    // All plans use the same Whop product; plan tier tracked in metadata
+    return productId;
+}
+
+// Keep for backward compat with existing references
 const WHOP_PLAN_IDS: Record<string, string> = {
-    standard: 'plan_faxbella_standard',
-    daypass: 'plan_faxbella_daypass',
-    // Legacy support
-    starter: 'plan_faxbella_standard',
-    business: 'plan_faxbella_standard',
-    enterprise: 'plan_faxbella_standard',
+    standard: process.env.WHOP_PRODUCT_ID || 'plan_faxbella_standard',
+    daypass: process.env.WHOP_PRODUCT_ID || 'plan_faxbella_daypass',
+    starter: process.env.WHOP_PRODUCT_ID || 'plan_faxbella_standard',
+    business: process.env.WHOP_PRODUCT_ID || 'plan_faxbella_standard',
+    enterprise: process.env.WHOP_PRODUCT_ID || 'plan_faxbella_standard',
 };
 
 const PLAN_PRICES: Record<string, number> = {

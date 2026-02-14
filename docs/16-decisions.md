@@ -27,6 +27,14 @@ This document tracks all major architectural, technical, business, and strategic
 | D-015 | Feb 2026 | Allow customers to **bring their own API keys** (HumbleFax and Gemini) | Technical / Flexibility | Schema supports optional `humbleFaxAccessKey`, `humbleFaxSecretKey`, and `geminiApiKey` per customer. Falls back to platform credentials if not provided. Gives enterprise customers control over their own accounts and billing. | Platform-only credentials (limits enterprise adoption), mandatory customer keys (too complex for small practices) | Active |
 | D-016 | Feb 2026 | **Self-serve primary, sales-assisted secondary** go-to-market | Business / Sales | 80% of customers should self-serve (landing page, trial, Stripe checkout, automated onboarding emails). Sales-assisted path reserved for Enterprise deals ($299+/month) with discovery calls, demos, BAA negotiation. | Fully self-serve (misses enterprise), fully sales-led (doesn't scale), PLG only (slow for healthcare) | Active |
 | D-017 | Feb 2026 | Use **faxbella.com** as primary domain | Business / Brand | Clean, memorable domain that combines "fax" with "bella" (beautiful in Italian) -- conveying elegant fax management. Professional enough for healthcare market. | faxai.com (taken), smartfax.io (generic), faxrouter.com (too literal) | Active |
+| D-018 | Feb 13, 2026 | Use **Passkeys (WebAuthn)** for authentication instead of Clerk/passwords | Technical / Auth | Passwordless authentication eliminates password reuse, phishing, and credential stuffing attacks. Built natively in `convex/passkeys.ts` + `hooks/use-passkey.ts`. Sessions stored in localStorage (`faxbella_session` key). No third-party auth provider dependency. Middleware protects `/dashboard`, `/settings`, `/api/protected` routes. | Clerk (third-party dependency, cost), NextAuth (complexity), email/password (phishing risk), Auth0 (cost at scale) | Active |
+| D-019 | Feb 13, 2026 | Add **Whop** as backup payment processor alongside Stripe | Business / Payments | Whop (`convex/whop.ts`) provides a redundant payment path if Stripe has issues or restrictions. Admin-toggleable via `paymentSettings` table. Both webhook handlers coexist in `convex/http.ts`. Never remove either -- they must coexist. | Stripe-only (single point of failure), LemonSqueezy (less proven), Paddle (less control) | Active |
+| D-020 | Feb 13, 2026 | Switch from HumbleFax to **self-hosted Faxbot (FreeSWITCH)** for fax infrastructure | Technical / Infrastructure | Faxbot (github.com/DMontgomery40/Faxbot) is a Docker-based, self-hosted fax server using FreeSWITCH with a REST API. Provides full control over fax infrastructure, eliminates per-fax API costs at scale, and is HIPAA compliant. Cloned to `infra/faxbot/`. Will run on Vultr VPS. | Continue with HumbleFax (higher per-fax cost at scale), Twilio (deprecated fax API), Phaxio (pricing concerns) | Active |
+| D-021 | Feb 13, 2026 | Use **BulkVS** as SIP trunk provider | Technical / Infrastructure | BulkVS offers the lowest SIP trunk rates ($0.0003/min inbound, $0.004/min outbound) with HIPAA BAA available. Connects to Faxbot's FreeSWITCH via SIP/T.38 protocol for fax-optimized transmission. | Twilio SIP (more expensive), Telnyx (less fax-focused), Bandwidth (enterprise pricing) | Active |
+| D-022 | Feb 13, 2026 | Deploy fax server on **Vultr VPS** with HIPAA BAA | Technical / Deployment | Vultr provides $20/mo VPS with HIPAA BAA availability, which is required for healthcare fax processing. Docker-based deployment of Faxbot container. Cost-effective for early-stage while supporting compliance requirements. | AWS EC2 (more expensive), DigitalOcean (no HIPAA BAA), Hetzner (no HIPAA BAA), self-hosted (ops burden) | Active |
+| D-023 | Feb 13, 2026 | Keep **HumbleFax code** in codebase (legacy, not active, not deleted) | Technical / Architecture | HumbleFax integration code is intentionally retained as a fallback option. If Faxbot deployment has issues, the team can revert to HumbleFax quickly. Code is clearly marked as legacy/inactive. This is a deliberate decision, not technical debt. | Delete HumbleFax code (loses fallback), maintain both actively (too complex) | Active |
+| D-024 | Feb 13, 2026 | Target **pharmacy niche** for initial launch | Product / Strategy | All landing page copy, pricing page, and marketing materials are pharmacy-specific. Pharmacies are high-volume fax users (prescriptions, refills, prior authorizations) and represent the ideal ICP for FaxBella's AI routing. Niche focus enables sharper messaging and faster product-market fit. | General healthcare (too broad), dental (lower volume), veterinary (smaller market) | Active |
+| D-025 | Feb 13, 2026 | Switch from **Cloudflare Workers to Cloudflare Pages** for frontend deployment | Technical / Deployment | Cloudflare Pages with OpenNext adapter (`pages_build_output_dir = ".open-next"`) provides simpler deployment for Next.js applications. `wrangler.toml` and `open-next.config.ts` configured. Pages offers better static asset handling and simpler CI/CD compared to Workers for this use case. | Cloudflare Workers (more complex config), Vercel (banned per project policy), self-hosted (ops burden) | Active |
 
 ---
 
@@ -35,16 +43,17 @@ This document tracks all major architectural, technical, business, and strategic
 | Category | Count | Description |
 |----------|-------|-------------|
 | Technical / AI | 1 | AI model and processing decisions |
-| Technical / Infrastructure | 1 | Fax provider and external service choices |
+| Technical / Infrastructure | 3 | Fax provider, SIP trunk, and external service choices |
 | Technical / Email | 1 | Email delivery provider |
 | Technical / Backend | 1 | Backend platform and database |
-| Technical / Architecture | 1 | System design patterns |
-| Technical / Security | 1 | Authentication and data isolation |
+| Technical / Architecture | 2 | System design patterns, legacy code retention |
+| Technical / Security | 1 | Data isolation (webhook secrets) |
+| Technical / Auth | 1 | Authentication system (Passkeys/WebAuthn) |
 | Technical / Frontend | 1 | Frontend framework |
-| Technical / Deployment | 1 | Hosting and deployment |
+| Technical / Deployment | 3 | Hosting, VPS, and deployment platform choices |
 | Technical / Flexibility | 1 | Customer configuration options |
-| Product / Strategy | 1 | Feature set and competitive positioning |
-| Business / Payments | 1 | Payment processing |
+| Product / Strategy | 2 | Feature set, competitive positioning, niche targeting |
+| Business / Payments | 2 | Payment processing (Stripe primary, Whop backup) |
 | Business / Pricing | 1 | Pricing model and tiers |
 | Business / Legal | 1 | Corporate structure |
 | Business / Compliance | 1 | HIPAA and regulatory |
@@ -60,15 +69,19 @@ These are hard constraints that override all other decisions:
 
 1. **EmailIt is the ONLY email provider.** Never use Resend, SendGrid, or any alternative. Enforced in code comments and README.
 2. **HIPAA compliance is mandatory.** Every vendor must support BAAs. Every data flow must be encrypted.
-3. **HumbleFax is the fax provider.** Platform credentials are shared; customers can optionally bring their own.
+3. **Faxbot (FreeSWITCH) is the primary fax infrastructure.** Self-hosted on Vultr VPS with BulkVS SIP trunk. HumbleFax code retained as legacy fallback but is NOT active. (Updated from D-002, superseded by D-020.)
 4. **Gemini 2.0 Flash is the AI engine.** Low temperature (0.1) for deterministic outputs. JSON response format enforced.
 5. **Convex is the backend.** No migration path planned. Deep integration with scheduler, storage, and real-time queries.
+6. **Passkeys (WebAuthn) for auth.** No passwords, no third-party auth providers. Sessions via localStorage.
+7. **Stripe is primary payment processor, Whop is backup.** Both coexist. Admin-toggleable. Never remove either.
 
 ---
 
 ## Superseded Decisions
 
-*None yet. All decisions are currently active.*
+| # | Original Decision | Superseded By | Date | Reason |
+|---|-------------------|---------------|------|--------|
+| D-002 | Use **HumbleFax** as the fax provider | D-020 (Faxbot/FreeSWITCH) | Feb 13, 2026 | Self-hosted Faxbot provides full control, eliminates per-fax API costs at scale, and maintains HIPAA compliance. HumbleFax code retained as fallback per D-023. |
 
 ---
 

@@ -1,21 +1,17 @@
-# FaxBella - Cloudflare Workers Deployment via OpenNext
+# FaxBella - Cloudflare Pages Deployment via OpenNext
 # https://faxbella.com
 #
-# Build:  npx @opennextjs/cloudflare build
-# Deploy: npx @opennextjs/cloudflare deploy
+# Build:  npm run build:cf
+# Deploy: npm run deploy
+#
+# Custom domain: Set in Cloudflare Dashboard > Pages > faxbella > Custom Domains
+#   - faxbella.com
+#   - www.faxbella.com
 
 name = "faxbella"
 compatibility_date = "2025-12-01"
 compatibility_flags = ["nodejs_compat"]
-main = ".open-next/worker.js"
-
-routes = [
-  { pattern = "faxbella.com/*", zone_name = "faxbella.com" },
-  { pattern = "www.faxbella.com/*", zone_name = "faxbella.com" }
-]
-
-[assets]
-directory = ".open-next/assets"
+pages_build_output_dir = ".open-next"
 
 [vars]
 ENVIRONMENT = "production"

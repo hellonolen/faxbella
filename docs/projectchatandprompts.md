@@ -206,55 +206,156 @@ From `docs/15-prod-readiness.md`, confirmed by audit:
 
 ---
 
-## Recommended Next Steps (from Audit)
+## Session 002 Audit Update - Feb 13-14, 2026
 
-Priority order for reaching launch readiness:
+### Completion Assessment: ~85% (up from 20%)
 
-| Priority | Task | Estimated Effort | Dependency |
-|----------|------|-----------------|------------|
-| P0-1 | Implement authentication (Clerk recommended) | 1-2 days | None |
-| P0-2 | Build Stripe checkout + webhook handler | 1-2 days | Auth |
-| P0-3 | Build dashboard UI (fax inbox, recipient management, settings) | 3-5 days | Auth |
-| P0-4 | Polish landing page with real design | 1-2 days | None |
-| P1-1 | Add legal pages (ToS, Privacy, BAA) | 1 day | None |
-| P1-2 | Set up error monitoring (Sentry) | 0.5 days | None |
-| P1-3 | Implement onboarding email sequence via EmailIt | 1 day | Auth + Stripe |
-| P1-4 | Write integration tests for routing flow | 1-2 days | None |
-| P2-1 | Deploy to Convex Cloud + Cloudflare Pages | 0.5 days | All P0 |
-| P2-2 | Configure faxbella.com domain | 0.5 days | Deployment |
-| P2-3 | Create demo video | 1 day | Dashboard |
-| P2-4 | Fix FaxAI naming remnants in code | 0.5 days | None |
-
-**Estimated total to launch-ready: 12-18 days of focused development.**
+| Area | Session 001 Status | Session 002 Status | Completion | Notes |
+|------|-------------------|-------------------|------------|-------|
+| AI Routing Engine | BUILT | BUILT | 100% | Unchanged -- still enterprise-grade |
+| Database Schema | BUILT | EXPANDED | 100% | Added 4 new tables (passkeys x3, paymentSettings). Now 8 tables total. |
+| HTTP Webhook Handler | BUILT | EXPANDED | 100% | Now has `/webhook/:secret`, `/stripe`, `/whop`, `/health` routes |
+| Customer Management | BUILT (90%) | BUILT | 95% | Stripe webhook handler now exists |
+| Recipient Management | BUILT | BUILT | 100% | Unchanged |
+| Outbound Fax | BUILT | UPGRADED | 100% | Now supports file upload + cover page generation |
+| Authentication | NOT BUILT (0%) | BUILT | 100% | Passkeys (WebAuthn) via `convex/passkeys.ts` + `hooks/use-passkey.ts` |
+| Payments (Stripe) | NOT BUILT (0%) | BUILT | 90% | Checkout + subscription lifecycle in `convex/stripe.ts`. Billing portal TBD. |
+| Payments (Whop) | N/A | BUILT | 90% | Backup processor in `convex/whop.ts`. Admin-toggleable. |
+| Landing Page | PARTIAL (40%) | BUILT | 95% | Fully styled, pharmacy-niche copy, responsive |
+| Dashboard UI | NOT BUILT (0%) | BUILT | 90% | Shell, sidebar, topbar, all pages built |
+| Inbox (list + detail) | NOT BUILT | BUILT | 90% | List view + detail view with AI extraction display |
+| Send Fax | NOT BUILT | BUILT | 90% | File upload + cover page + recipient selection |
+| Sent History | NOT BUILT | BUILT | 90% | List + detail views |
+| Recipients CRUD | NOT BUILT | BUILT | 95% | Full create/read/update/delete |
+| Settings Page | NOT BUILT | BUILT | 85% | Account settings, fax credentials, notifications |
+| Billing Page | NOT BUILT | BUILT | 85% | Plan display, upgrade flow, payment history |
+| Legal Pages | NOT BUILT (0%) | BUILT | 100% | Privacy policy + terms of service (restyled) |
+| Error Pages | NOT BUILT | BUILT | 100% | error.tsx, not-found.tsx, global-error.tsx |
+| UI Components | NOT BUILT | BUILT | 95% | 11 components: button, input, badge, card, table, modal, toggle, loading, empty-state, file-upload, pdf-viewer |
+| Notifications | NOT BUILT | BUILT | 90% | In-app notification system via `convex/notifications.ts` |
+| Cover Page Gen | NOT BUILT | BUILT | 90% | `convex/coverPage.ts` |
+| Fax Infrastructure | HumbleFax only | Faxbot cloned | 70% | Faxbot in `infra/faxbot/`, not yet deployed to VPS |
+| Deployment | NOT DONE | CONFIGURED | 60% | Convex dev deployed. Cloudflare Pages configured but not live. |
+| Testing | NOT BUILT (0%) | NOT BUILT | 0% | Still zero tests |
+| Monitoring | NOT BUILT (0%) | NOT BUILT | 0% | No Sentry or error tracking |
+| Help Center | NOT BUILT (0%) | NOT BUILT | 0% | No FAQ or help articles |
 
 ---
 
-## File Inventory (as of Feb 7, 2026)
+## Recommended Next Steps (Updated Feb 14, 2026)
 
-### Source Files (10 files)
+Previous P0 items from Session 001 are now mostly COMPLETE. Updated priorities:
+
+| Priority | Task | Status | Estimated Effort | Dependency |
+|----------|------|--------|-----------------|------------|
+| ~~P0-1~~ | ~~Implement authentication~~ | DONE (Passkeys) | -- | -- |
+| ~~P0-2~~ | ~~Build Stripe checkout + webhook handler~~ | DONE | -- | -- |
+| ~~P0-3~~ | ~~Build dashboard UI~~ | DONE | -- | -- |
+| ~~P0-4~~ | ~~Polish landing page~~ | DONE (pharmacy niche) | -- | -- |
+| ~~P1-1~~ | ~~Add legal pages~~ | DONE (privacy, terms) | -- | -- |
+| P1-2 | Deploy Faxbot to Vultr VPS | NOT STARTED | 1-2 days | BulkVS account |
+| P1-3 | Configure BulkVS SIP trunk | NOT STARTED | 0.5 days | Vultr VPS |
+| P1-4 | Set up error monitoring (Sentry) | NOT STARTED | 0.5 days | None |
+| P1-5 | Implement onboarding email sequence via EmailIt | NOT STARTED | 1 day | None |
+| P1-6 | Write integration tests for routing flow | NOT STARTED | 1-2 days | None |
+| P1-7 | Configure Stripe + Whop webhook secrets in Convex env vars | NOT STARTED | 0.5 days | None |
+| P2-1 | Deploy frontend to Cloudflare Pages (go live) | NOT STARTED | 0.5 days | All P1 |
+| P2-2 | Connect faxbella.com domain to Cloudflare | NOT STARTED | 0.5 days | P2-1 |
+| P2-3 | Create demo video | NOT STARTED | 1 day | P2-1 |
+| P2-4 | Fix FaxAI naming remnants in code | NOT STARTED | 0.5 days | None |
+| P2-5 | Build help center / FAQ | NOT STARTED | 1 day | None |
+| P2-6 | Add BAA download page | NOT STARTED | 0.5 days | None |
+| P2-7 | Add Stripe billing portal integration | NOT STARTED | 0.5 days | P1-7 |
+
+**Estimated remaining to launch-ready: 8-12 days of focused development.**
+
+---
+
+## File Inventory (as of Feb 14, 2026)
+
+### Convex Backend Files (11 files)
 ```
+convex/schema.ts               -- Database schema (8 tables, 18+ indexes)
+convex/faxRouting.ts           -- AI routing engine (core value prop)
+convex/http.ts                 -- HTTP router (/webhook/:secret, /stripe, /whop, /health)
+convex/customers.ts            -- Customer CRUD + dashboard query
+convex/recipients.ts           -- Recipient CRUD
+convex/outboundFax.ts          -- Outbound fax sending (upgraded: file upload support)
+convex/stripe.ts               -- Stripe checkout + subscription lifecycle [NEW]
+convex/whop.ts                 -- Whop backup payment processor [NEW]
+convex/passkeys.ts             -- WebAuthn passkey auth + sessions [NEW]
+convex/notifications.ts        -- In-app notification system [NEW]
+convex/coverPage.ts            -- Cover page generation [NEW]
+```
+
+### Frontend - App Pages
+```
+app/layout.tsx                 -- Root layout with ConvexClientProvider
+app/page.tsx                   -- Landing page (pharmacy niche, fully styled)
+app/sitemap.ts                 -- Dynamic sitemap generation [NEW]
+app/error.tsx                  -- Error boundary [NEW]
+app/not-found.tsx              -- 404 page [NEW]
+app/global-error.tsx           -- Global error boundary [NEW]
 app/ConvexClientProvider.tsx   -- Convex React provider wrapper
-app/globals.css                -- Global styles
-app/layout.tsx                 -- Root layout with metadata
-app/page.tsx                   -- Landing page (hero, features, pricing)
-convex/schema.ts               -- Database schema (4 tables, 12 indexes)
-convex/faxRouting.ts           -- AI routing engine (517 lines)
-convex/http.ts                 -- HTTP webhook handler (137 lines)
-convex/customers.ts            -- Customer CRUD + dashboard query (183 lines)
-convex/recipients.ts           -- Recipient CRUD (158 lines)
-convex/outboundFax.ts          -- Outbound fax sending (241 lines)
+app/globals.css                -- Global styles (expanded)
+app/(static)/privacy/page.tsx  -- Privacy policy [NEW]
+app/(static)/terms/page.tsx    -- Terms of service [NEW]
+app/auth/login/                -- Login page [NEW]
+app/auth/signup/               -- Signup page [NEW]
+app/pricing/                   -- Pricing page [NEW]
+app/dashboard/                 -- Dashboard overview [NEW]
+app/dashboard/inbox/           -- Fax inbox list + detail [NEW]
+app/dashboard/send/            -- Send fax page [NEW]
+app/dashboard/sent/            -- Sent history list + detail [NEW]
+app/dashboard/recipients/      -- Recipients CRUD [NEW]
+app/dashboard/settings/        -- Settings page [NEW]
+app/dashboard/billing/         -- Billing page [NEW]
 ```
 
-### Configuration Files (5 files)
+### Frontend - Components
 ```
-package.json                   -- Dependencies (Next.js 15, React 19, Convex, Stripe)
+components/ui/button            -- Button component [NEW]
+components/ui/input             -- Input component [NEW]
+components/ui/badge             -- Badge component [NEW]
+components/ui/card              -- Card component [NEW]
+components/ui/table             -- Table component [NEW]
+components/ui/modal             -- Modal component [NEW]
+components/ui/toggle            -- Toggle component [NEW]
+components/ui/loading           -- Loading spinner [NEW]
+components/ui/empty-state       -- Empty state display [NEW]
+components/ui/file-upload       -- File upload component [NEW]
+components/ui/pdf-viewer        -- PDF viewer component [NEW]
+components/marketing/header     -- Site header [NEW]
+components/marketing/footer     -- Site footer [NEW]
+components/dashboard/shell      -- Dashboard layout shell [NEW]
+components/dashboard/sidebar    -- Dashboard sidebar nav [NEW]
+components/dashboard/topbar     -- Dashboard top bar [NEW]
+```
+
+### Hooks
+```
+hooks/use-passkey.ts           -- React hook for passkey auth [NEW]
+```
+
+### Infrastructure
+```
+infra/faxbot/                  -- Faxbot (FreeSWITCH) Docker-based fax server [NEW]
+middleware.ts                  -- Security headers + route protection [NEW]
+```
+
+### Configuration Files
+```
+package.json                   -- Dependencies (Next.js 15, React 19, Convex, Stripe, Whop)
 tsconfig.json                  -- TypeScript configuration
 next.config.mjs                -- Next.js configuration
+wrangler.toml                  -- Cloudflare Pages deployment config [NEW]
+open-next.config.ts            -- OpenNext adapter for Cloudflare [NEW]
 .gitignore                     -- Git ignore rules
 .env.example                   -- Environment variable template
+public/robots.txt              -- Search engine directives [NEW]
 ```
 
-### Documentation Files (18 files)
+### Documentation Files (21 files)
 ```
 docs/01-vision.md              -- Mission, values, roadmap
 docs/02-problem.md             -- Market problem, cost analysis
@@ -263,7 +364,7 @@ docs/04-solution.md            -- Solution overview, ROI calculator
 docs/05-features.md            -- Feature matrix, 14 features
 docs/06-pricing.md             -- 3 tiers, ROI analysis, objections
 docs/07-ux.md                  -- User flows, page designs, email templates
-docs/08-tech.md                -- Architecture, schema, API design
+docs/08-tech.md                -- Architecture, schema, API design [UPDATED]
 docs/09-security.md            -- HIPAA, encryption, vendor security
 docs/10-legal.md               -- ToS, privacy, BAA, DPA
 docs/11-metrics.md             -- KPIs, quarterly targets
@@ -271,9 +372,10 @@ docs/12-launch.md              -- Launch plan, marketing channels
 docs/13-sales.md               -- Sales funnel, objection handling
 docs/14-ops.md                 -- Support, billing, monitoring
 docs/15-prod-readiness.md      -- Production checklist with status
-docs/16-decisions.md           -- Key decisions log (17 entries) [NEW]
-docs/projectreflog.md          -- Session reference log [NEW]
-docs/projectchatandprompts.md  -- This file [NEW]
+docs/16-decisions.md           -- Key decisions log (25 entries) [UPDATED]
+docs/projectreflog.md          -- Session reference log [UPDATED]
+docs/projectchatandprompts.md  -- This file [UPDATED]
+CLAUDE.md                      -- Claude Code instructions [UPDATED]
 README.md                      -- Project overview and setup guide
 ```
 
